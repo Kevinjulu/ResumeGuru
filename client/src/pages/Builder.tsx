@@ -24,6 +24,8 @@ import {
   Palette,
   Download,
   ArrowLeft,
+  Sun,
+  Moon,
   Eye,
   EyeOff,
   Check,
@@ -50,6 +52,23 @@ function BuilderContent() {
   const { setTemplate, setColor } = useResume();
   const [currentStep, setCurrentStep] = useState(0);
   const [showPreview, setShowPreview] = useState(true);
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("theme") === "dark";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDark]);
 
   useEffect(() => {
     if (initialTemplate) {
@@ -129,6 +148,17 @@ function BuilderContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsDark((v) => !v)}
+              className="gap-2"
+              aria-label="Toggle theme"
+              title="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"

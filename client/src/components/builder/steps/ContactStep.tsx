@@ -286,7 +286,12 @@ export function ContactStep({ onNext }: ContactStepProps) {
           </div>
 
           <div className="flex justify-end pt-4">
-            <Button type="submit" size="lg" data-testid="button-next-contact">
+            <Button
+              type="submit"
+              size="lg"
+              data-testid="button-next-contact"
+              className="gradient-primary text-white shadow"
+            >
               Save & Continue
             </Button>
           </div>

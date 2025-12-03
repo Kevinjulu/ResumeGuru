@@ -48,8 +48,8 @@ export function ContactStep({ onNext }: ContactStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">Contact Information</h2>
-        <p className="text-gray-300 mt-2 text-sm leading-relaxed">
+        <h2 className="text-2xl font-bold text-gray-900 gradient-text-primary">Contact Information</h2>
+        <p className="text-gray-600 mt-1">
           Let employers know how to reach you. This information will appear at the top of your resume.
         </p>
       </div>
@@ -67,15 +67,18 @@ export function ContactStep({ onNext }: ContactStepProps) {
                     First Name
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="John"
-                      {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                        handleFieldChange("firstName", e.target.value);
-                      }}
-                      data-testid="input-first-name"
-                    />
+                    <div className="bg-white/80 border border-gray-200 rounded-md p-1">
+                      <Input
+                        placeholder="John"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          handleFieldChange("firstName", e.target.value);
+                        }}
+                        data-testid="input-first-name"
+                        className="bg-transparent"
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -104,26 +104,26 @@ function BuilderContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex flex-col">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* subtle animated background accents (light) */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-blue-100/60 rounded-full blur-3xl opacity-40 animate-float" />
+        <div className="absolute bottom-16 right-20 w-72 h-72 bg-pink-100/50 rounded-full blur-3xl opacity-30 animate-float delay-2000" />
       </div>
 
-      <header className="relative z-50 bg-gradient-to-b from-slate-900/80 to-slate-900/40 backdrop-blur-md border-b border-white/5 sticky top-0">
+      <header className="bg-white/80 backdrop-blur sticky top-0 z-50 border-b border-gray-200">
         <div className="max-w-screen-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
-              <Button variant="ghost" size="sm" className="gap-2 text-white hover:bg-white/10 transition-all" data-testid="button-back-home">
+              <Button variant="ghost" size="sm" className="gap-2" data-testid="button-back-home">
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Back to Home</span>
               </Button>
             </Link>
-            <div className="h-6 w-px bg-white/10 hidden sm:block" />
+            <div className="h-6 w-px bg-gray-200 hidden sm:block" />
             <Link href="/">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent hidden sm:inline cursor-pointer">
-                resume<span className="text-orange-400">guru</span>
+              <span className="text-xl font-bold text-gray-900 hidden sm:inline cursor-pointer">
+                resume<span className="text-primary">guru</span>
               </span>
             </Link>
           </div>
@@ -133,7 +133,7 @@ function BuilderContent() {
               variant="outline"
               size="sm"
               onClick={() => setShowPreview(!showPreview)}
-              className="gap-2 lg:hidden text-white border-white/20 bg-white/5 hover:bg-white/10"
+              className="gap-2 lg:hidden"
               data-testid="button-toggle-preview"
             >
               {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -143,19 +143,19 @@ function BuilderContent() {
         </div>
 
         <div className="max-w-screen-2xl mx-auto px-4 pb-3">
-          <div className="relative h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur">
+          <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500"
+              className="h-full gradient-primary"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              transition={{ duration: 0.45, ease: "easeInOut" }}
             />
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex relative z-10">
-        <aside className="hidden md:block w-64 bg-gradient-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-md border-r border-white/10 p-4 sticky top-[88px] h-[calc(100vh-88px)]">
+      <div className="flex-1 flex">
+        <aside className="hidden md:block w-64 bg-white/80 backdrop-blur-md border-r border-gray-200 p-4 sticky top-[88px] h-[calc(100vh-88px)]">
           <nav className="space-y-2">
             {steps.map((step, index) => {
               const isActive = index === currentStep;
@@ -163,45 +163,36 @@ function BuilderContent() {
               const isAccessible = index <= currentStep;
 
               return (
-                <motion.button
+                <button
                   key={step.id}
                   onClick={() => goToStep(index)}
                   disabled={!isAccessible}
-                  whileHover={isAccessible ? { x: 4 } : {}}
-                  whileTap={isAccessible ? { scale: 0.98 } : {}}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group ${
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-sm"
                       : isCompleted
-                      ? "text-gray-300 hover:bg-white/5"
-                      : "text-gray-500 cursor-not-allowed opacity-50"
+                      ? "text-gray-700 hover:bg-gray-100"
+                      : "text-gray-400 cursor-not-allowed"
                   }`}
                   data-testid={`nav-step-${step.id}`}
                 >
-                  <motion.div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold transition-all ${
+                  <div
+                    className={`w-9 h-9 rounded-md flex items-center justify-center text-sm ${
                       isActive
-                        ? "bg-white/20 text-white"
+                        ? "bg-white/90 text-blue-600"
                         : isCompleted
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : "bg-gray-700 text-gray-500"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-100 text-gray-500"
                     }`}
-                    animate={isActive ? { rotate: [0, -5, 5, 0] } : {}}
-                    transition={{ duration: 0.6, repeat: Infinity, repeatType: "loop" }}
                   >
                     {isCompleted ? (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }}>
-                        <Check className="w-4 h-4" />
-                      </motion.div>
+                      <Check className="w-4 h-4" />
                     ) : (
                       <step.icon className="w-4 h-4" />
                     )}
-                  </motion.div>
-                  <span className="font-semibold text-sm">{step.label}</span>
-                  {isActive && (
-                    <motion.div className="ml-auto w-1 h-5 bg-white rounded-full" layoutId="active-indicator" />
-                  )}
-                </motion.button>
+                  </div>
+                  <span className="font-medium text-sm">{step.label}</span>
+                </button>
               );
             })}
           </nav>
@@ -210,19 +201,16 @@ function BuilderContent() {
         <main className="flex-1 flex">
           <div className={`flex-1 ${showPreview ? "lg:w-1/2" : "w-full"}`}>
             <ScrollArea className="h-[calc(100vh-88px)]">
-              <div className="max-w-2xl mx-auto p-6 md:p-8">
+              <div className="max-w-2xl mx-auto p-6">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentStep}
-                    initial={{ opacity: 0, x: 20, y: 10 }}
-                    animate={{ opacity: 1, x: 0, y: 0 }}
-                    exit={{ opacity: 0, x: -20, y: -10 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="backdrop-blur"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-2xl p-6 border border-white/10 backdrop-blur-xl shadow-2xl">
-                      {renderStep()}
-                    </div>
+                    {renderStep()}
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -230,79 +218,51 @@ function BuilderContent() {
           </div>
 
           {showPreview && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="hidden lg:block w-1/2 bg-gradient-to-b from-slate-800/50 to-slate-900/50 border-l border-white/10 p-8 sticky top-[88px] h-[calc(100vh-88px)] overflow-y-auto backdrop-blur-md"
-            >
+            <div className="hidden lg:block w-1/2 bg-gray-100 border-l border-gray-200 p-8 sticky top-[88px] h-[calc(100vh-88px)] overflow-y-auto">
               <div className="max-w-md mx-auto">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="text-sm font-semibold text-transparent bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text mb-6 text-center"
-                >
-                  Live Preview
-                </motion.div>
-                <motion.div
-                  className="rounded-xl overflow-hidden shadow-2xl border border-white/10"
-                  initial={{ scale: 0.95, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                >
-                  <ResumePreview />
-                </motion.div>
+                <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Live Preview</h3>
+                <ResumePreview />
               </div>
-            </motion.div>
+            </div>
           )}
         </main>
       </div>
 
-      <motion.div
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 to-slate-900/80 backdrop-blur-md border-t border-white/10 px-4 py-3 flex overflow-x-auto gap-2"
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 100 }}
-      >
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex overflow-x-auto gap-2">
         {steps.map((step, index) => {
           const isActive = index === currentStep;
           const isCompleted = index < currentStep;
-          const isAccessible = index <= currentStep;
 
           return (
-            <motion.button
+            <button
               key={step.id}
               onClick={() => goToStep(index)}
               disabled={index > currentStep}
-              whileHover={isAccessible ? { scale: 1.05 } : {}}
-              whileTap={isAccessible ? { scale: 0.95 } : {}}
-              className={`flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-all ${
+              className={`flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 isActive
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/25"
+                  ? "bg-primary/10 text-primary"
                   : isCompleted
-                  ? "text-emerald-400 bg-emerald-500/10"
-                  : "text-gray-500 bg-gray-700/20"
+                  ? "text-green-600"
+                  : "text-gray-400"
               }`}
               data-testid={`nav-mobile-step-${step.id}`}
             >
-              <motion.div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${
+              <div
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                   isActive
-                    ? "bg-white/20 text-white"
+                    ? "bg-primary text-white"
                     : isCompleted
-                    ? "bg-emerald-500/30 text-emerald-300"
-                    : "bg-gray-600 text-gray-400"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200 text-gray-500"
                 }`}
-                animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                transition={{ duration: 0.6, repeat: Infinity }}
               >
                 {isCompleted ? <Check className="w-3 h-3" /> : index + 1}
-              </motion.div>
-              <span className="text-[10px] font-semibold text-white">{step.label}</span>
-            </motion.button>
+              </div>
+              <span className="text-[10px] font-medium">{step.label}</span>
+            </button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 }

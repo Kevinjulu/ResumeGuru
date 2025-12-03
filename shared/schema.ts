@@ -6,30 +6,27 @@ import { z } from "zod";
 export const resumeTemplates = [
   { id: "clean", name: "Clean", style: "professional", description: "Full-color sidebar with contact info and summary" },
   { id: "taj-mahal", name: "Taj Mahal", style: "professional", description: "Large sidebar for contact, summary, and education" },
-  { id: "2025", name: "2025", style: "modern", description: "Modern dark blue design for contemporary professionals", premium: true },
+  { id: "2025", name: "2025", style: "modern", description: "Modern dark blue design for contemporary professionals" },
   { id: "corporate", name: "Corporate", style: "professional", description: "Bold full-color header with minimalist sidebar" },
-  { id: "advanced", name: "Advanced", style: "creative", description: "Modern bubbles for contact info and skills with headshot", premium: true },
-  { id: "majestic", name: "Majestic", style: "professional", description: "Elegant design with sophisticated layout", premium: true },
+  { id: "advanced", name: "Advanced", style: "creative", description: "Modern bubbles for contact info and skills with headshot" },
+  { id: "majestic", name: "Majestic", style: "professional", description: "Elegant design with sophisticated layout" },
   { id: "modern", name: "Modern", style: "modern", description: "Simple header with round headshot spot" },
   { id: "minimalist", name: "Minimalist", style: "simple", description: "Basic layout with unique skill bars" },
   { id: "elegant", name: "Elegant", style: "creative", description: "Center-aligned with simple headshot at top" },
   { id: "chicago", name: "Chicago", style: "professional", description: "Basic design for formal industries" },
-  { id: "neo", name: "Neo", style: "modern", description: "Large accent header with crisp typography", premium: true },
-  { id: "sidebar-pro", name: "Sidebar Pro", style: "professional", description: "Two-column layout with colored sidebar", premium: true },
-  { id: "timeline", name: "Timeline", style: "modern", description: "Vertical experience timeline with bold dates", premium: true },
-  { id: "compact", name: "Compact", style: "simple", description: "Space-efficient two-column details" },
-  { id: "slate", name: "Slate", style: "modern", description: "Subtle gradient with clean typography" },
-  { id: "bold", name: "Bold", style: "modern", description: "Striking header with color accents", premium: true },
-  { id: "two-column", name: "Two Column", style: "creative", description: "Eye-catching dual column layout", premium: true },
-  { id: "hybrid", name: "Hybrid", style: "modern", description: "Highlighted skills with focused experience" },
-  { id: "standard", name: "Standard", style: "professional", description: "Well-balanced resume with clear hierarchy" },
-  { id: "unique", name: "Unique", style: "creative", description: "Clean design with logical structure", premium: true },
-  { id: "quick", name: "Quick", style: "modern", description: "Readable layout optimized for speed" },
-  { id: "premium", name: "Premium", style: "professional", description: "Sleek header and custom icons", premium: true },
-  { id: "pastel", name: "Pastel", style: "creative", description: "Soft accents with open spacing" },
 ] as const;
 
 export type TemplateId = typeof resumeTemplates[number]["id"];
+
+// CV Templates
+export const cvTemplates = [
+  { id: "classic", name: "Classic", style: "professional", description: "Traditional CV layout with clear sections" },
+  { id: "modern-cv", name: "Modern", style: "modern", description: "Contemporary layout with strong headings" },
+  { id: "creative-cv", name: "Creative", style: "creative", description: "Two-column layout with emphasis on skills", premium: true },
+  { id: "minimal-cv", name: "Minimal", style: "simple", description: "Lightweight design focused on content" },
+] as const;
+
+export type CvTemplateId = typeof cvTemplates[number]["id"];
 
 // Template Colors
 export const templateColors = [
@@ -44,37 +41,6 @@ export const templateColors = [
 ] as const;
 
 export type ColorId = typeof templateColors[number]["id"];
-
-export const templateTypography: Record<TemplateId, {
-  headerFamily: string;
-  bodyFamily: string;
-  headerWeight: number;
-  bodyWeight: number;
-}> = {
-  clean: { headerFamily: "Poppins", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  "taj-mahal": { headerFamily: "Playfair Display", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  "2025": { headerFamily: "Lora", bodyFamily: "Open Sans", headerWeight: 700, bodyWeight: 400 },
-  corporate: { headerFamily: "Montserrat", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  advanced: { headerFamily: "Poppins", bodyFamily: "Open Sans", headerWeight: 700, bodyWeight: 400 },
-  majestic: { headerFamily: "Libre Baskerville", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  modern: { headerFamily: "Outfit", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  minimalist: { headerFamily: "Space Grotesk", bodyFamily: "Inter", headerWeight: 600, bodyWeight: 400 },
-  elegant: { headerFamily: "Playfair Display", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  chicago: { headerFamily: "PT Sans", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  neo: { headerFamily: "Outfit", bodyFamily: "Inter", headerWeight: 800, bodyWeight: 400 },
-  "sidebar-pro": { headerFamily: "Montserrat", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  timeline: { headerFamily: "Poppins", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  compact: { headerFamily: "Inter", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  slate: { headerFamily: "Gabarito", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  bold: { headerFamily: "Outfit", bodyFamily: "Roboto", headerWeight: 800, bodyWeight: 400 },
-  "two-column": { headerFamily: "Barlow", bodyFamily: "Manrope", headerWeight: 700, bodyWeight: 400 },
-  hybrid: { headerFamily: "Roboto", bodyFamily: "Roboto", headerWeight: 700, bodyWeight: 400 },
-  standard: { headerFamily: "PT Sans", bodyFamily: "Raleway", headerWeight: 700, bodyWeight: 400 },
-  unique: { headerFamily: "Montserrat", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  quick: { headerFamily: "Inter", bodyFamily: "Inter", headerWeight: 700, bodyWeight: 400 },
-  premium: { headerFamily: "Barlow", bodyFamily: "Martian Mono", headerWeight: 700, bodyWeight: 400 },
-  pastel: { headerFamily: "Arima", bodyFamily: "Raleway", headerWeight: 700, bodyWeight: 400 },
-};
 
 // Contact Info Schema
 export const contactInfoSchema = z.object({
@@ -152,25 +118,66 @@ export const resumeDataSchema = z.object({
   certifications: z.array(certificationSchema).default([]),
   templateId: z.string().default("clean"),
   colorId: z.string().default("orange"),
-  layoutVariant: z.enum(["single", "double"]).optional(),
-  sectionOrder: z
-    .array(z.enum(["summary", "experience", "education", "skills", "certifications"]))
-    .default(["summary", "experience", "education", "skills", "certifications"]),
 });
 
 export type ResumeData = z.infer<typeof resumeDataSchema>;
+
+// Cover Letter Schema
+export const coverLetterSenderSchema = z.object({
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  email: z.string().email().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+});
+
+export const coverLetterRecipientSchema = z.object({
+  name: z.string().optional(),
+  title: z.string().optional(),
+  company: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+});
+
+export const coverLetterDataSchema = z.object({
+  senderInfo: coverLetterSenderSchema.default({}),
+  recipientInfo: coverLetterRecipientSchema.default({}),
+  date: z.string().default(new Date().toISOString().split("T")[0]),
+  subject: z.string().default(""),
+  body: z.string().default(""),
+  templateId: z.string().default("basic-cl"),
+  colorId: z.string().default("orange"),
+});
+
+export type CoverLetterData = z.infer<typeof coverLetterDataSchema>;
+
+// Cover Letter Templates
+export const coverLetterTemplates = [
+  { id: "basic-cl", name: "Basic", style: "professional", description: "Traditional single-column cover letter" },
+  { id: "modern-cl", name: "Modern", style: "modern", description: "Clean header with strong typography" },
+  { id: "creative-cl", name: "Creative", style: "creative", description: "Stylized header and accent blocks", premium: true },
+  { id: "elegant-cl", name: "Elegant", style: "professional", description: "Refined layout with subtle separators" },
+] as const;
 
 // Database Tables
 export const users = pgTable("users", {
   id: varchar("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  accountTier: varchar("account_tier").notNull().default("free"),
+  accountTier: text("account_tier").notNull().default("free"),
+  passwordResetToken: varchar("password_reset_token"),
+  passwordResetExpires: timestamp("password_reset_expires"),
 });
 
 export const resumes = pgTable("resumes", {
   id: varchar("id").primaryKey(),
-  userId: varchar("user_id"),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
   title: text("title").notNull().default("My Resume"),
   data: jsonb("data").$type<ResumeData>().notNull(),
   templateId: varchar("template_id").notNull().default("clean"),
@@ -179,44 +186,20 @@ export const resumes = pgTable("resumes", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Subscriptions
-export const subscriptions = pgTable("subscriptions", {
+export const coverLetters = pgTable("cover_letters", {
   id: varchar("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tier: varchar("tier").notNull(),
-  status: varchar("status").notNull().default("active"),
-  currentPeriodStart: timestamp("current_period_start").defaultNow(),
-  currentPeriodEnd: timestamp("current_period_end"),
-  renewalDate: timestamp("renewal_date"),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+  title: text("title").notNull().default("My Cover Letter"),
+  data: jsonb("data").$type<CoverLetterData>().notNull(),
+  templateId: varchar("template_id").notNull().default("basic-cl"),
+  colorId: varchar("color_id").notNull().default("orange"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Payments / Receipts
-export const payments = pgTable("payments", {
-  id: varchar("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  tier: varchar("tier").notNull(),
-  amount: integer("amount_cents").notNull(),
-  currency: varchar("currency").notNull().default("USD"),
-  provider: varchar("provider").notNull().default("paypal"),
-  providerOrderId: varchar("provider_order_id"),
-  providerCaptureId: varchar("provider_capture_id"),
-  receiptEncrypted: text("receipt_encrypted"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Payment audit logs
-export const paymentAudit = pgTable("payment_audit", {
-  id: varchar("id").primaryKey(),
-  endpoint: varchar("endpoint").notNull(),
-  userId: varchar("user_id"),
-  payloadEncrypted: text("payload_encrypted"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
   accountTier: true,
 });
@@ -227,25 +210,18 @@ export const insertResumeSchema = createInsertSchema(resumes).omit({
   updatedAt: true,
 });
 
-export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+export const insertCoverLetterSchema = createInsertSchema(coverLetters).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-});
-
-export const insertPaymentSchema = createInsertSchema(payments).omit({
-  id: true,
-  createdAt: true,
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Resume = typeof resumes.$inferSelect;
 export type InsertResume = z.infer<typeof insertResumeSchema>;
-export type Subscription = typeof subscriptions.$inferSelect;
-export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
-export type Payment = typeof payments.$inferSelect;
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type CoverLetter = typeof coverLetters.$inferSelect;
+export type InsertCoverLetter = z.infer<typeof insertCoverLetterSchema>;
 
 // Pre-written content library
 export const jobCategories = [

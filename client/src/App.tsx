@@ -3,7 +3,7 @@ import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { useAuth, useSession } from "@clerk/clerk-react";
 import { ConvexReactClient } from "convex/react";
 
 const Home = React.lazy(() => import("@/pages/Home"));
@@ -24,7 +24,23 @@ const MyCoverLetters = React.lazy(() => import("@/pages/MyCoverLetters")); // La
 const CoverLetterTemplates = React.lazy(() => import("@/pages/CoverLetterTemplates"));
 const Checkout = React.lazy(() => import("@/pages/Checkout"));
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+const convexUrl = (import.meta.env.VITE_CONVEX_URL as string | undefined) || undefined;
+let convex: ReturnType<typeof ConvexReactClient> | null = null;
+if (convexUrl) {
+  try {
+    convex = new ConvexReactClient(convexUrl as string);
+  } catch (e) {
+    // Don't throw during module initialization — handle at render time
+    console.warn("ConvexReactClient initialization failed:", e);
+    convex = null;
+  }
+} else {
+  // Informative warning for missing config during development
+  // overlay plugin shows this message; keep a console warning instead
+  // so the app does not crash when convex isn't configured.
+  // The presence of this env var is required for Convex features.
+  console.warn("VITE_CONVEX_URL is not set — Convex client unavailable.");
+}
 
 function Router() {
   return (
@@ -51,17 +67,70 @@ function Router() {
 }
 
 function App() {
+  function AuthMaintenance() {
+    const { isSignedIn, getToken } = useAuth();
+    const { session } = useSession();
+
+    React.useEffect(() => {
+      if (!isSignedIn) return;
+
+      let cancelled = false;
+      const refresh = async () => {
+        try {
+          await getToken({ template: "convex" });
+        } catch (e: any) {
+          const msg = String(e?.message || "");
+          if (msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("jwt")) {
+            try {
+              await session?.reload();
+              await getToken({ template: "convex" });
+            } catch (_) {
+              /* swallow */
+            }
+          }
+        }
+      };
+
+      // Initial refresh, then periodic preemptive refresh
+      refresh();
+      const id = setInterval(refresh, 4 * 60 * 1000);
+      return () => {
+        cancelled = true;
+        clearInterval(id);
+      };
+    }, [isSignedIn, getToken, session]);
+
+    return null;
+  }
+
+  // If Convex client isn't available, render app without provider
+  if (!convex) {
+    return (
+      <TooltipProvider>
+        <Toaster />
+        <div style={{ padding: 16 }}>
+          <strong style={{ color: "#b45309" }}>
+            Convex client not configured — some features are disabled.
+          </strong>
+        </div>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Router />
+        </Suspense>
+        <AuthMaintenance />
+      </TooltipProvider>
+    );
+  }
+
   return (
-    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string}>
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        <TooltipProvider>
-          <Toaster />
-          <Suspense fallback={<div>Loading...</div>}>
-            <Router />
-          </Suspense>
-        </TooltipProvider>
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      <TooltipProvider>
+        <Toaster />
+        <Suspense fallback={<div>Loading...</div>}>
+          <Router />
+        </Suspense>
+        <AuthMaintenance />
+      </TooltipProvider>
+    </ConvexProviderWithClerk>
   );
 }
 

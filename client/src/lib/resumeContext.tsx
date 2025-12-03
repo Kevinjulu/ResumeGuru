@@ -18,8 +18,6 @@ interface ResumeContextType {
   removeCertification: (id: string) => void;
   setTemplate: (templateId: string) => void;
   setColor: (colorId: string) => void;
-  setLayoutVariant: (variant: "single" | "double") => void;
-  setSectionOrder: (order: Array<"summary" | "experience" | "education" | "skills" | "certifications">) => void;
   resetResume: () => void;
   loadResume: (data: ResumeData) => void;
 }
@@ -33,7 +31,6 @@ const defaultResumeData: ResumeData = {
   certifications: [],
   templateId: "clean",
   colorId: "orange",
-  sectionOrder: ["summary","experience","education","skills","certifications"],
 };
 
 const ResumeContext = createContext<ResumeContextType | null>(null);
@@ -217,22 +214,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
     });
   }, [saveToStorage]);
 
-  const setLayoutVariant = useCallback((variant: "single" | "double") => {
-    setResumeData((prev) => {
-      const updated = { ...prev, layoutVariant: variant };
-      saveToStorage(updated);
-      return updated;
-    });
-  }, [saveToStorage]);
-
-  const setSectionOrder = useCallback((order: Array<"summary" | "experience" | "education" | "skills" | "certifications">) => {
-    setResumeData((prev) => {
-      const updated = { ...prev, sectionOrder: order };
-      saveToStorage(updated);
-      return updated;
-    });
-  }, [saveToStorage]);
-
   const resetResume = useCallback(() => {
     setResumeData(defaultResumeData);
     localStorage.removeItem("resumeData");
@@ -262,8 +243,6 @@ export function ResumeProvider({ children }: { children: ReactNode }) {
         removeCertification,
         setTemplate,
         setColor,
-        setLayoutVariant,
-        setSectionOrder,
         resetResume,
         loadResume,
       }}

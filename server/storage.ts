@@ -1,41 +1,29 @@
-import { type User, type InsertUser, type Resume, type InsertResume, type ResumeData, type Subscription, type InsertSubscription, type Payment, type InsertPayment, users, resumes, subscriptions, payments, paymentAudit } from "@shared/schema";
+import { type User, type InsertUser, type Resume, type InsertResume, type ResumeData, users, resumes } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
+import ConvexStorage from "./convexStorage";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
   
   getResume(id: string): Promise<Resume | undefined>;
   getResumesByUserId(userId: string): Promise<Resume[]>;
   createResume(resume: InsertResume): Promise<Resume>;
   updateResume(id: string, data: Partial<Resume>): Promise<Resume | undefined>;
-  deleteResume(id: string): Promise<boolean>;
-
-  getSubscriptionByUserId(userId: string): Promise<Subscription | undefined>;
-  upsertSubscription(userId: string, data: Omit<InsertSubscription, "userId"> & { tier: string }): Promise<Subscription>;
-  addPayment(payment: InsertPayment): Promise<Payment>;
-  listPaymentsByUserId(userId: string): Promise<Payment[]>;
-  addPaymentAudit(entry: { endpoint: string; userId?: string | null; payloadEncrypted?: string | null }): Promise<void>;
+  deleteResume(id: string, userId?: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private resumes: Map<string, Resume>;
-  private subs: Map<string, Subscription>;
-  private pay: Map<string, Payment>;
-  private audits: { id: string; endpoint: string; userId?: string | null; payloadEncrypted?: string | null; createdAt: Date }[];
 
   constructor() {
     this.users = new Map();
     this.resumes = new Map();
-    this.subs = new Map();
-    this.pay = new Map();
-    this.audits = [];
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -50,17 +38,9 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, accountTier: insertUser.accountTier ?? "free" } as User;
+    const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
-  }
-
-  async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
-    const u = this.users.get(id);
-    if (!u) return undefined;
-    const updated = { ...u, ...data } as User;
-    this.users.set(id, updated);
-    return updated;
   }
 
   async getResume(id: string): Promise<Resume | undefined> {
@@ -103,56 +83,11 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  async deleteResume(id: string): Promise<boolean> {
+  async deleteResume(id: string, _userId?: string): Promise<boolean> {
     return this.resumes.delete(id);
   }
 
-  async getSubscriptionByUserId(userId: string): Promise<Subscription | undefined> {
-    return this.subs.get(userId);
-  }
 
-  async upsertSubscription(userId: string, data: Omit<InsertSubscription, "userId"> & { tier: string }): Promise<Subscription> {
-    const now = new Date();
-    const sub: Subscription = {
-      id: this.subs.get(userId)?.id || randomUUID(),
-      userId,
-      tier: data.tier,
-      status: (data as any).status || "active",
-      currentPeriodStart: (data as any).currentPeriodStart || now,
-      currentPeriodEnd: (data as any).currentPeriodEnd || undefined,
-      renewalDate: (data as any).renewalDate || undefined,
-      createdAt: this.subs.get(userId)?.createdAt || now,
-      updatedAt: now,
-    } as Subscription;
-    this.subs.set(userId, sub);
-    return sub;
-  }
-
-  async addPayment(payment: InsertPayment): Promise<Payment> {
-    const id = randomUUID();
-    const rec: Payment = {
-      id,
-      userId: payment.userId!,
-      tier: payment.tier!,
-      amount: payment.amount!,
-      currency: payment.currency || "USD",
-      provider: payment.provider || "paypal",
-      providerOrderId: payment.providerOrderId || null,
-      providerCaptureId: payment.providerCaptureId || null,
-      receiptEncrypted: (payment as any).receiptEncrypted || null,
-      createdAt: new Date(),
-    } as unknown as Payment;
-    this.pay.set(id, rec);
-    return rec;
-  }
-
-  async listPaymentsByUserId(userId: string): Promise<Payment[]> {
-    return Array.from(this.pay.values()).filter(p => p.userId === userId);
-  }
-
-  async addPaymentAudit(entry: { endpoint: string; userId?: string | null; payloadEncrypted?: string | null }): Promise<void> {
-    this.audits.push({ id: randomUUID(), endpoint: entry.endpoint, userId: entry.userId ?? null, payloadEncrypted: entry.payloadEncrypted ?? null, createdAt: new Date() });
-  }
 }
 
 class DbStorage implements IStorage {
@@ -177,22 +112,15 @@ class DbStorage implements IStorage {
     const id = randomUUID();
     const [row] = await this.db
       .insert(users)
-      .values({ id, username: insertUser.username, password: insertUser.password, accountTier: insertUser.accountTier ?? "free" })
+      .values({
+        id,
+        username: insertUser.username,
+        email: (insertUser as any).email ?? `${insertUser.username}@example.com`,
+        password: insertUser.password,
+        accountTier: (insertUser as any).accountTier ?? "free",
+      })
       .returning();
     return row as User;
-  }
-
-  async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
-    const [row] = await this.db
-      .update(users)
-      .set({
-        username: data.username ?? undefined,
-        password: data.password ?? undefined,
-        accountTier: data.accountTier ?? undefined,
-      })
-      .where(eq(users.id, id))
-      .returning();
-    return row as User | undefined;
   }
 
   async getResume(id: string): Promise<Resume | undefined> {
@@ -240,89 +168,21 @@ class DbStorage implements IStorage {
     return row as Resume | undefined;
   }
 
-  async deleteResume(id: string): Promise<boolean> {
+  async deleteResume(id: string, _userId?: string): Promise<boolean> {
     const res = await this.db.delete(resumes).where(eq(resumes.id, id)).returning();
     return res.length > 0;
-  }
-
-  async getSubscriptionByUserId(userId: string): Promise<Subscription | undefined> {
-    const rows = await this.db.select().from(subscriptions).where(eq(subscriptions.userId, userId));
-    return rows[0] as Subscription | undefined;
-  }
-
-  async upsertSubscription(userId: string, data: Omit<InsertSubscription, "userId"> & { tier: string }): Promise<Subscription> {
-    const existing = await this.getSubscriptionByUserId(userId);
-    if (existing) {
-      const [row] = await this.db
-        .update(subscriptions)
-        .set({
-          tier: data.tier,
-          status: (data as any).status ?? undefined,
-          currentPeriodStart: (data as any).currentPeriodStart ?? undefined,
-          currentPeriodEnd: (data as any).currentPeriodEnd ?? undefined,
-          renewalDate: (data as any).renewalDate ?? undefined,
-          updatedAt: new Date(),
-        })
-        .where(eq(subscriptions.userId, userId))
-        .returning();
-      return row as Subscription;
-    } else {
-      const [row] = await this.db
-        .insert(subscriptions)
-        .values({
-          id: randomUUID(),
-          userId,
-          tier: data.tier,
-          status: (data as any).status ?? "active",
-          currentPeriodStart: (data as any).currentPeriodStart ?? new Date(),
-          currentPeriodEnd: (data as any).currentPeriodEnd ?? undefined,
-          renewalDate: (data as any).renewalDate ?? undefined,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-      return row as Subscription;
-    }
-  }
-
-  async addPayment(payment: InsertPayment): Promise<Payment> {
-    const [row] = await this.db
-      .insert(payments)
-      .values({
-        id: randomUUID(),
-        userId: payment.userId!,
-        tier: payment.tier!,
-        amount: payment.amount!,
-        currency: payment.currency || "USD",
-        provider: payment.provider || "paypal",
-        providerOrderId: payment.providerOrderId ?? undefined,
-        providerCaptureId: payment.providerCaptureId ?? undefined,
-        receiptEncrypted: (payment as any).receiptEncrypted ?? undefined,
-        createdAt: new Date(),
-      })
-      .returning();
-    return row as Payment;
-  }
-
-  async listPaymentsByUserId(userId: string): Promise<Payment[]> {
-    const rows = await this.db.select().from(payments).where(eq(payments.userId, userId));
-    return rows as Payment[];
-  }
-
-  async addPaymentAudit(entry: { endpoint: string; userId?: string | null; payloadEncrypted?: string | null }): Promise<void> {
-    await this.db
-      .insert(paymentAudit)
-      .values({
-        id: randomUUID(),
-        endpoint: entry.endpoint,
-        userId: entry.userId ?? undefined,
-        payloadEncrypted: entry.payloadEncrypted ?? undefined,
-        createdAt: new Date(),
-      });
   }
 }
 
 function makeStorage(): IStorage {
+  const convexUrl = process.env.CONVEX_URL;
+  if (convexUrl) {
+    try {
+      return new ConvexStorage(convexUrl) as unknown as IStorage;
+    } catch (e) {
+      console.error("Failed to initialize ConvexStorage:", e);
+    }
+  }
   const url = process.env.DATABASE_URL;
   if (url) {
     return new DbStorage(url);

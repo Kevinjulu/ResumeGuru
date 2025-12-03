@@ -3,43 +3,30 @@ import { v } from "convex/values";
 
 export default defineSchema({
   users: defineTable({
-    name: v.string(),
-    tokenIdentifier: v.string(),
-  }).index("by_token", ["tokenIdentifier"]),
+    // Clerk user identifier (subject)
+    userId: v.string(),
+    email: v.optional(v.string()),
+    name: v.optional(v.string()),
+  }).index("by_userId", ["userId"]),
+
   resumes: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     title: v.string(),
-    data: v.any(),
     templateId: v.string(),
     colorId: v.string(),
-  }),
+    data: v.any(),
+  })
+    .index("by_user", ["userId"])
+    ,
+
   coverLetters: defineTable({
-    userId: v.id("users"),
+    userId: v.string(),
     title: v.string(),
-    data: v.any(),
     templateId: v.string(),
     colorId: v.string(),
-  }),
-  subscriptions: defineTable({
-    userId: v.id("users"),
-    tier: v.string(),
-    status: v.string(),
-    currentPeriodStart: v.number(),
-    currentPeriodEnd: v.number(),
-    renewalDate: v.number(),
-  }),
-  payments: defineTable({
-    userId: v.id("users"),
-    tier: v.string(),
-    amount: v.number(),
-    currency: v.string(),
-    provider: v.string(),
-    providerOrderId: v.string(),
-    providerCaptureId: v.string(),
-    receiptEncrypted: v.string(),
-  }),
-  files: defineTable({
-    name: v.string(),
-    storageId: v.string(),
-  }),
+    data: v.any(),
+  })
+    .index("by_user", ["userId"])
+    ,
 });
+

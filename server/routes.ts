@@ -1,17 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { requireAuth } from "./auth";
 import { resumeDataSchema, templateColors } from "@shared/schema";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  const genAI = process.env.GEMINI_API_KEY
-    ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string)
+  // Initialize OpenAI client (if API key is available)
+  const openai = process.env.OPENAI_API_KEY 
+    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     : null;
 
   // Generate AI summary
@@ -19,7 +19,7 @@ export async function registerRoutes(
     try {
       const { contactInfo, experiences, skills } = req.body;
 
-      if (!genAI) {
+      if (!openai) {
         // Return a placeholder summary if no OpenAI key
         const name = contactInfo?.firstName ? `${contactInfo.firstName}` : "A professional";
         const jobTitle = experiences?.[0]?.jobTitle || "experienced professional";
@@ -30,12 +30,35 @@ export async function registerRoutes(
         });
       }
 
-      const experienceList = experiences?.map((exp: any) => `${exp.jobTitle} at ${exp.company}`).join(", ") || "";
+      // Build context for AI
+      const experienceList = experiences?.map((exp: any) => 
+        `${exp.jobTitle} at ${exp.company}`
+      ).join(", ") || "";
+      
       const skillList = skills?.map((s: any) => s.name).join(", ") || "";
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const prompt = `You are a professional resume writer. Generate a concise, impactful 2-3 sentence professional summary for a resume. Focus on key achievements, skills, and value proposition. Write in first person implied (no 'I' statements). Make it compelling and tailored to the person's background.\n\nName: ${contactInfo?.firstName || ""} ${contactInfo?.lastName || ""}\nExperience: ${experienceList || "Various professional roles"}\nSkills: ${skillList || "Various professional skills"}\n\nGenerate only the summary text, no quotes or additional formatting.`;
-      const response = await model.generateContent(prompt);
-      const summary = response.response.text() || "";
+
+      // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      const response = await openai.chat.completions.create({
+        model: "gpt-5",
+        messages: [
+          {
+            role: "system",
+            content: "You are a professional resume writer. Generate a concise, impactful 2-3 sentence professional summary for a resume. Focus on key achievements, skills, and value proposition. Write in first person implied (no 'I' statements). Make it compelling and tailored to the person's background."
+          },
+          {
+            role: "user",
+            content: `Write a professional summary for someone with the following background:
+            Name: ${contactInfo?.firstName || ""} ${contactInfo?.lastName || ""}
+            Experience: ${experienceList || "Various professional roles"}
+            Skills: ${skillList || "Various professional skills"}
+            
+            Generate only the summary text, no quotes or additional formatting.`
+          }
+        ],
+        max_completion_tokens: 200,
+      });
+
+      const summary = response.choices[0]?.message?.content || "";
       res.json({ summary });
     } catch (error) {
       console.error("Error generating summary:", error);
@@ -116,13 +139,15 @@ export async function registerRoutes(
   app.post("/api/resumes", async (req, res) => {
     try {
       const { title, data, templateId, colorId, userId } = req.body;
-      
+      // Prefer a Clerk-provided user id header if present (server should verify this token in production)
+      const clerkUserId = (req as any).clerkUserId || (req.user as any)?.id || userId || null;
+
       const resume = await storage.createResume({
         title: title || "My Resume",
         data,
         templateId: templateId || "clean",
         colorId: colorId || "orange",
-        userId: (req.user as any)?.id || userId || null,
+        userId: clerkUserId,
       });
 
       res.json(resume);
@@ -132,9 +157,13 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/resumes", requireAuth, async (req, res) => {
+  // List resumes: accept either a verified passport session or a Clerk user id header
+  app.get("/api/resumes", async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
+      const headerUser = (req as any).clerkUserId || undefined;
+      const passportUser = (req.user as any)?.id;
+      const userId = headerUser || passportUser;
+      if (!userId) return res.status(401).json({ error: "Unauthorized" });
       const resumes = await storage.getResumesByUserId(userId);
       res.json(resumes);
     } catch (error) {
@@ -160,7 +189,9 @@ export async function registerRoutes(
   // Update resume
   app.patch("/api/resumes/:id", async (req, res) => {
     try {
-      const resume = await storage.updateResume(req.params.id, req.body);
+      const clerkUserId = (req as any).clerkUserId || (req.user as any)?.id || null;
+      const payload = { ...(req.body || {}), userId: clerkUserId };
+      const resume = await storage.updateResume(req.params.id, payload as any);
       if (!resume) {
         return res.status(404).json({ error: "Resume not found" });
       }
@@ -174,7 +205,8 @@ export async function registerRoutes(
   // Delete resume
   app.delete("/api/resumes/:id", async (req, res) => {
     try {
-      const success = await storage.deleteResume(req.params.id);
+      const clerkUserId = (req as any).clerkUserId || (req.user as any)?.id || null;
+      const success = await storage.deleteResume(req.params.id, clerkUserId || undefined);
       if (!success) {
         return res.status(404).json({ error: "Resume not found" });
       }

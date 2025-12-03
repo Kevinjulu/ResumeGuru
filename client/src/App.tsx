@@ -1,9 +1,10 @@
 import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { ConvexReactClient } from "convex/react";
 
 const Home = React.lazy(() => import("@/pages/Home"));
 const Templates = React.lazy(() => import("@/pages/Templates"));
@@ -21,6 +22,9 @@ const MyResumes = React.lazy(() => import("@/pages/MyResumes")); // Lazy load My
 const CoverLetterBuilder = React.lazy(() => import("@/pages/CoverLetterBuilder")); // Lazy load CoverLetterBuilder
 const MyCoverLetters = React.lazy(() => import("@/pages/MyCoverLetters")); // Lazy load MyCoverLetters
 const CoverLetterTemplates = React.lazy(() => import("@/pages/CoverLetterTemplates"));
+const Checkout = React.lazy(() => import("@/pages/Checkout"));
+
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
 function Router() {
   return (
@@ -40,6 +44,7 @@ function Router() {
       <Route path="/cover-letter-builder" component={CoverLetterBuilder} /> // Add route for CoverLetterBuilder
       <Route path="/my-cover-letters" component={MyCoverLetters} /> // Add route for MyCoverLetters
       <Route path="/cover-letter-templates" component={CoverLetterTemplates} />
+      <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -47,14 +52,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Suspense fallback={<div>Loading...</div>}>
-          <Router />
-        </Suspense>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string}>
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <TooltipProvider>
+          <Toaster />
+          <Suspense fallback={<div>Loading...</div>}>
+            <Router />
+          </Suspense>
+        </TooltipProvider>
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
   );
 }
 

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
-import { PlusCircle, MailOpen, Trash2, Edit, Copy } from "lucide-react";
+import { PlusCircle, FileText, Trash2, Edit, Copy } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "convex/_generated/api";
 import { useToast } from "@/hooks/use-toast";
@@ -11,28 +11,28 @@ import { useState } from "react";
 import { useConvexAuth } from "convex/react";
 import { Badge } from "@/components/ui/badge";
 
-interface CoverLetterItem {
+interface ResumeItem {
   _id: string;
   title: string;
   templateId: string;
   colorId: string;
   _creationTime: number;
-  data: any; // Raw cover letter data
+  data: any; // Raw resume data
 }
 
-export default function MyCoverLetters() {
+export default function MyResumes() {
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const { toast } = useToast();
   const [location, navigate] = useLocation();
 
-  const coverLetters = useQuery(api.coverLetters.getCoverLetters, isAuthenticated ? undefined : "skip");
+  const resumes = useQuery(api.resumes.getResumes, isAuthenticated ? undefined : "skip");
 
-  const deleteMutation = useMutation(api.coverLetters.deleteCoverLetter);
-  const createMutation = useMutation(api.coverLetters.createCoverLetter);
+  const deleteMutation = useMutation(api.resumes.deleteResume);
+  const createMutation = useMutation(api.resumes.createResume);
 
-  const duplicateMutation = useMutation(api.coverLetters.createCoverLetter).withOptimisticUpdate(
+  const duplicateMutation = useMutation(api.resumes.createResume).withOptimisticUpdate(
     (localStore, { title, data, templateId, colorId }) => {
-      const optimisticCoverLetter = {
+      const optimisticResume = {
         _id: "temp-id",
         title: `${title} (Copy)`,
         data,
@@ -41,11 +41,11 @@ export default function MyCoverLetters() {
         _creationTime: Date.now(),
         userId: "temp-user-id",
       };
-      const existingCoverLetters = localStore.getQuery(api.coverLetters.getCoverLetters);
-      if (existingCoverLetters) {
+      const existingResumes = localStore.getQuery(api.resumes.getResumes);
+      if (existingResumes) {
         localStore.setQuery(
-          api.coverLetters.getCoverLetters,
-          [...existingCoverLetters, optimisticCoverLetter]
+          api.resumes.getResumes,
+          [...existingResumes, optimisticResume]
         );
       }
     }
@@ -55,44 +55,44 @@ export default function MyCoverLetters() {
     try {
       await deleteMutation({ id });
       toast({
-        title: "Cover Letter Deleted",
-        description: "Your cover letter has been successfully deleted.",
+        title: "Resume Deleted",
+        description: "Your resume has been successfully deleted.",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete cover letter.",
+        description: "Failed to delete resume.",
         variant: "destructive",
       });
     }
   };
 
-  const handleDuplicate = async (coverLetter: CoverLetterItem) => {
+  const handleDuplicate = async (resume: ResumeItem) => {
     try {
       await duplicateMutation({
-        title: `${coverLetter.title} (Copy)`,
-        data: coverLetter.data,
-        templateId: coverLetter.templateId,
-        colorId: coverLetter.colorId,
+        title: `${resume.title} (Copy)`,
+        data: resume.data,
+        templateId: resume.templateId,
+        colorId: resume.colorId,
         userId: "temp-user-id", // This should be the actual user ID
       });
       toast({
-        title: "Cover Letter Duplicated",
-        description: "A copy of your cover letter has been created.",
+        title: "Resume Duplicated",
+        description: "A copy of your resume has been created.",
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to duplicate cover letter.",
+        description: "Failed to duplicate resume.",
         variant: "destructive",
       });
     }
   };
 
-  if (authLoading || coverLetters === undefined) {
+  if (authLoading || resumes === undefined) {
     return (
       <MainLayout>
-        <div className="container mx-auto py-10 text-center">Loading cover letters...</div>
+        <div className="container mx-auto py-10 text-center">Loading resumes...</div>
       </MainLayout>
     );
   }
@@ -101,59 +101,57 @@ export default function MyCoverLetters() {
     <MainLayout>
       <div className="container mx-auto py-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">My Cover Letters</h1>
-          <Link href="/cover-letter-templates">
+          <h1 className="text-3xl font-bold">My Resumes</h1>
+          <Link href="/builder">
             <Button className="gap-2">
               <PlusCircle className="w-5 h-5" />
-              Create New Cover Letter
+              Create New Resume
             </Button>
           </Link>
         </div>
 
-        {coverLetters && coverLetters.length === 0 ? (
+        {resumes && resumes.length === 0 ? (
           <Card className="text-center py-10">
             <CardHeader>
-              <MailOpen className="mx-auto w-12 h-12 text-gray-400 mb-4" />
-              <CardTitle>No Cover Letters Yet</CardTitle>
+              <FileText className="mx-auto w-12 h-12 text-gray-400 mb-4" />
+              <CardTitle>No Resumes Yet</CardTitle>
               <CardDescription>
-                It looks like you haven't created any cover letters. Start building your first one now!
+                It looks like you haven't created any resumes. Start building your first one now!
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/cover-letter-templates">
+              <Link href="/builder">
                 <Button className="gap-2">
                   <PlusCircle className="w-4 h-4" />
-                  Create My First Cover Letter
+                  Create My First Resume
                 </Button>
               </Link>
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {coverLetters?.map((coverLetter) => (
-              <Card key={coverLetter._id} className="flex flex-col">
+            {resumes?.map((resume) => (
+              <Card key={resume._id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
-                    <span>{coverLetter.title}</span>
-                    <Badge variant="secondary">{coverLetter.templateId}</Badge>
+                    <span>{resume.title}</span>
+                    <Badge variant="secondary">{resume.templateId}</Badge>
                   </CardTitle>
                   <CardDescription className="text-sm">
-                    Last updated: {new Date(coverLetter._creationTime).toLocaleDateString()}
+                    Last updated: {new Date(resume._creationTime).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
                   {/* Mini preview or details can go here */}
                   <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-700 h-24 overflow-hidden">
-                    {coverLetter.data?.subject ? `Subject: ${coverLetter.data.subject}` : "No subject available."}
-                    <br />
-                    {coverLetter.data?.body ? coverLetter.data.body.substring(0, 100) + '...' : "No body content available."}
+                    {resume.data?.summary || "No summary available."}
                   </div>
                 </CardContent>
                 <div className="flex justify-end p-4 pt-0 gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/cover-letter-builder?coverLetterId=${coverLetter._id}`)} className="gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/builder?resumeId=${resume._id}`)} className="gap-2">
                     <Edit className="w-4 h-4" /> Edit
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDuplicate(coverLetter)} className="gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleDuplicate(resume)} className="gap-2">
                     <Copy className="w-4 h-4" /> Duplicate
                   </Button>
                   <AlertDialog>
@@ -166,12 +164,12 @@ export default function MyCoverLetters() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This action cannot be undone. This will permanently delete your cover letter "{coverLetter.title}".
+                          This action cannot be undone. This will permanently delete your resume "{resume.title}".
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(coverLetter._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => handleDelete(resume._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>

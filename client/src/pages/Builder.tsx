@@ -1,9 +1,25 @@
+import { useState, useEffect } from "react";
+import { Link, useSearch } from "wouter";
 import { ArrowLeft, Eye, EyeOff, Check, Save, FileText, User, Sparkles, Award, Palette, Download, Loader2, Briefcase, GraduationCap } from "lucide-react"; // Add Save icon
 import { motion, AnimatePresence } from "framer-motion";
 import { resumeTemplates, cvTemplates } from "@shared/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query"; // Import useMutation and useQueryClient
 import { apiRequest } from "@/lib/queryClient"; // Import apiRequest
 import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { ResumeProvider, useResume } from "@/lib/resumeContext";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ResumePreview } from "@/components/builder/ResumePreview";
+import { UploadStep } from "@/components/builder/steps/UploadStep";
+import { ContactStep } from "@/components/builder/steps/ContactStep";
+import { SummaryStep } from "@/components/builder/steps/SummaryStep";
+import { ExperienceStep } from "@/components/builder/steps/ExperienceStep";
+import { EducationStep } from "@/components/builder/steps/EducationStep";
+import { SkillsStep } from "@/components/builder/steps/SkillsStep";
+import { CertificationsStep } from "@/components/builder/steps/CertificationsStep";
+import { TemplateStep } from "@/components/builder/steps/TemplateStep";
+import { DownloadStep } from "@/components/builder/steps/DownloadStep";
 
 const steps = [
   { id: "upload", label: "Upload", icon: FileText }, // New first step

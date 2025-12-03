@@ -92,6 +92,23 @@ ResumeGuru is a powerful, open-source resume builder that helps you create profe
     npm run start
     ```
 
+### Deploying to Vercel (frontend)
+
+This repository builds both a frontend (`client`) and a bundled server. The Vite client build outputs static files into `dist/public` via the root `build` script. To deploy the frontend to Vercel from GitHub:
+
+- Ensure your repo is pushed to GitHub (it already is).
+- In the Vercel dashboard, create a new project and import the `ResumeGuru` repository.
+- Set the project root to the repository root (the default).
+- Vercel will run the `build` script defined in `package.json` by default. The `vercel.json` file included in this repo instructs Vercel to use `dist/public` as the static output directory.
+- Environment variables: configure the same env vars you use locally (e.g., `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_CONVEX_URL`, `DATABASE_URL`, etc.) in the Vercel project settings.
+
+Notes:
+- This `vercel.json` config deploys the frontend static build only (served from `dist/public`). The repo also contains an Express server (bundled to `dist/index.cjs` by the `build` script). Deploying the backend as a Node server on Vercel requires converting the server into Vercel Serverless Functions (or using another host like Render, Fly, or a dedicated server). If you want me to adapt the backend to Vercel Serverless Functions, I can help — it will require some changes to `server/index.ts` (exporting a handler) and adding serverless function wrappers.
+
+If you prefer a single-click setup I can:
+- Add an `api/` serverless wrapper for the Express app (so Vercel will run it as serverless functions).
+- Or add documentation and a small script for deploying backend to Render/Heroku and frontend to Vercel.
+
 -   **Lint**: Lint the codebase for errors.
     ```sh
     npm run lint

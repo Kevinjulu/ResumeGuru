@@ -1,4 +1,7 @@
+import React, { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import {
   NavigationMenu,
@@ -9,23 +12,47 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, FileText, Briefcase, GraduationCap, BookOpen, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { Menu, FileText, Briefcase, GraduationCap, BookOpen, DollarSign, ListRestart, MailOpen } from "lucide-react"; // Import MailOpen
 
 export function Header() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) throw new Error("Not authenticated");
+      const data = await res.json();
+      if (!data) return null;
+      return data;
+    },
+    retry: false,
+  });
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (!res.ok) throw new Error("Logout failed");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      setLocation("/");
+    },
+  });
 
   const navItems = [
     {
       label: "Builders",
       items: [
         { label: "Resume Builder", href: "/builder", icon: FileText, description: "Build your resume step by step" },
-        { label: "Cover Letter Builder", href: "/cover-letter", icon: Briefcase, description: "Create matching cover letters" },
+        { label: "Cover Letter Builder", href: "/cover-letter-builder", icon: Briefcase, description: "Create matching cover letters" }, // Updated href
       ],
     },
     { label: "Resumes", href: "/templates" },
-    { label: "Cover Letters", href: "/cover-letters" },
+    { label: "My Resumes", href: "/my-resumes", icon: ListRestart },
+    { label: "Cover Letters", href: "/cover-letter-templates" }, // This should be a link to CL templates
+    { label: "My Cover Letters", href: "/my-cover-letters", icon: MailOpen }, // New item
     { label: "CVs", href: "/cvs" },
     { label: "Resources", href: "/resources" },
     { label: "Pricing", href: "/pricing" },
@@ -74,17 +101,22 @@ export function Header() {
                         </NavigationMenuContent>
                       </>
                     ) : (
-                      <Link href={item.href!}>
-                        <NavigationMenuLink
-                          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
-                            location === item.href
-                              ? "text-primary"
-                              : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                          }`}
-                        >
-                          {item.label}
+                      // Check if user is logged in for "My Resumes"
+                      (item.href === '/my-resumes' && !user) || (item.href === '/my-cover-letters' && !user) ? null : ( 
+                        <NavigationMenuLink asChild>
+                          <Link href={item.href!}>
+                            <span
+                              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                                location === item.href
+                                  ? "text-primary"
+                                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                              }`}
+                            >
+                              {item.label}
+                            </span>
+                          </Link>
                         </NavigationMenuLink>
-                      </Link>
+                      )
                     )}
                   </NavigationMenuItem>
                 ))}
@@ -93,16 +125,51 @@ export function Header() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="outline" className="font-medium" data-testid="button-login">
-                Login
-              </Button>
-            </Link>
-            <Link href="/builder">
-              <Button className="font-medium bg-primary hover:bg-primary/90" data-testid="button-build-resume">
-                Build My Resume
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link href="/my-resumes">
+                  <Button variant="ghost" className="font-medium">
+                    My Resumes
+                  </Button>
+                </Link>
+                <Link href="/my-cover-letters"> {/* Link to My Cover Letters */}
+                  <Button variant="ghost" className="font-medium">
+                    My Cover Letters
+                  </Button>
+                </Link>
+                <Link href="/account">
+                  <Button variant="outline" className="font-medium">
+                    My Account
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={() => logoutMutation.mutate()}
+                  disabled={logoutMutation.isPending}
+                  className="font-medium"
+                >
+                  Logout
+                </Button>
+                <Link href="/builder">
+                  <Button className="font-medium bg-primary hover:bg-primary/90" data-testid="button-build-resume">
+                    Build My Resume
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline" className="font-medium" data-testid="button-login">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="font-medium" data-testid="button-register">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -138,27 +205,68 @@ export function Header() {
                           ))}
                         </div>
                       ) : (
-                        <Link href={item.href!} onClick={() => setMobileOpen(false)}>
-                          <div
-                            className={`px-2 py-2 font-medium rounded-md cursor-pointer ${
-                              location === item.href
-                                ? "text-primary"
-                                : "text-gray-700 hover:text-gray-900"
-                            }`}
-                          >
-                            {item.label}
-                          </div>
-                        </Link>
+                        // Check if user is logged in for "My Resumes"
+                        (item.href === '/my-resumes' && !user) || (item.href === '/my-cover-letters' && !user) ? null : ( // Hide My Resumes/My Cover Letters if not logged in
+                          <Link href={item.href!} onClick={() => setMobileOpen(false)}>
+                            <div
+                              className={`px-2 py-2 font-medium rounded-md cursor-pointer ${
+                                location === item.href
+                                  ? "text-primary"
+                                  : "text-gray-700 hover:text-gray-900"
+                              }`}
+                            >
+                              {item.label}
+                            </div>
+                          </Link>
+                        )
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="border-t pt-4">
-                  <Link href="/login" onClick={() => setMobileOpen(false)}>
-                    <Button variant="outline" className="w-full" data-testid="button-mobile-login">
-                      Login
-                    </Button>
-                  </Link>
+                <div className="border-t pt-4 space-y-2">
+                  {user ? (
+                    <>
+                      <Link href="/my-resumes" onClick={() => setMobileOpen(false)}>
+                        <Button variant="outline" className="w-full">
+                          My Resumes
+                        </Button>
+                      </Link>
+                      <Link href="/my-cover-letters" onClick={() => setMobileOpen(false)}> {/* Link to My Cover Letters */}
+                        <Button variant="outline" className="w-full">
+                          My Cover Letters
+                        </Button>
+                      </Link>
+                      <Link href="/account" onClick={() => setMobileOpen(false)}>
+                        <Button variant="outline" className="w-full">
+                          My Account
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        className="w-full"
+                        onClick={() => {
+                          logoutMutation.mutate();
+                          setMobileOpen(false);
+                        }}
+                        disabled={logoutMutation.isPending}
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/login" onClick={() => setMobileOpen(false)}>
+                        <Button variant="outline" className="w-full" data-testid="button-mobile-login">
+                          Login
+                        </Button>
+                      </Link>
+                      <Link href="/register" onClick={() => setMobileOpen(false)}>
+                        <Button className="w-full" data-testid="button-mobile-register">
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </nav>
             </SheetContent>

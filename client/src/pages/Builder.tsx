@@ -1,36 +1,12 @@
-import { useState, useEffect } from "react";
-import { useSearch } from "wouter";
-import { ResumeProvider, useResume } from "@/lib/resumeContext";
-import { ResumePreview } from "@/components/builder/ResumePreview";
-import { ContactStep } from "@/components/builder/steps/ContactStep";
-import { SummaryStep } from "@/components/builder/steps/SummaryStep";
-import { ExperienceStep } from "@/components/builder/steps/ExperienceStep";
-import { EducationStep } from "@/components/builder/steps/EducationStep";
-import { SkillsStep } from "@/components/builder/steps/SkillsStep";
-import { CertificationsStep } from "@/components/builder/steps/CertificationsStep";
-import { TemplateStep } from "@/components/builder/steps/TemplateStep";
-import { DownloadStep } from "@/components/builder/steps/DownloadStep";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Link } from "wouter";
-import {
-  User,
-  FileText,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Sparkles,
-  Palette,
-  Download,
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  Check,
-} from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Check, Save, FileText, User, Sparkles, Award, Palette, Download, Loader2, Briefcase, GraduationCap } from "lucide-react"; // Add Save icon
 import { motion, AnimatePresence } from "framer-motion";
+import { resumeTemplates, cvTemplates } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query"; // Import useMutation and useQueryClient
+import { apiRequest } from "@/lib/queryClient"; // Import apiRequest
+import { useToast } from "@/hooks/use-toast"; // Import useToast
 
 const steps = [
+  { id: "upload", label: "Upload", icon: FileText }, // New first step
   { id: "contact", label: "Contact", icon: User },
   { id: "summary", label: "Summary", icon: FileText },
   { id: "experience", label: "Experience", icon: Briefcase },
@@ -45,30 +21,113 @@ function BuilderContent() {
   const searchParams = useSearch();
   const params = new URLSearchParams(searchParams);
   const initialTemplate = params.get("template");
+  const initialCvTemplate = params.get("cvTemplate");
   const initialColor = params.get("color");
+  const uploadMode = params.get("upload") === "true";
+  const resumeId = params.get("resumeId"); // Read resumeId from query params
+  const documentType = initialCvTemplate ? "cv" : "resume"; // Determine document type
 
-  const { setTemplate, setColor } = useResume();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showPreview, setShowPreview] = useState(true);
+  const { resumeData, setResumeData, setTemplate, setColor } = useResume();
+  const [currentStep, setCurrentStep] = useState(uploadMode ? 0 : 1); // Start at Upload or Contact
+  const [isResumeLoading, setIsResumeLoading] = useState(!!resumeId); // Track if a resume is being loaded
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
+  // Handle initial template/color based on URL params or load existing resume
   useEffect(() => {
-    if (initialTemplate) {
-      fetch('/api/auth/me', { credentials: 'include' })
-        .then(r => r.ok ? r.json() : null)
-        .then(d => {
-          const tpl = resumeTemplates.find(t => t.id === initialTemplate);
-          const isPrem = tpl && ('premium' in tpl) && (tpl as any).premium;
-          if (isPrem && d?.accountTier !== 'premium') return;
-          setTemplate(initialTemplate);
-        })
-        .catch(() => setTemplate(initialTemplate));
+    if (resumeId) {
+      const fetchResume = async () => {
+        try {
+          setIsResumeLoading(true);
+          const fetchedResume = await apiRequest('GET', `/api/resumes/${resumeId}`);
+          setResumeData(fetchedResume.data);
+          setTemplate(fetchedResume.templateId);
+          setColor(fetchedResume.colorId);
+          setCurrentStep(1); // Go to contact step after loading
+        } catch (error) {
+          console.error("Error loading resume:", error);
+          toast({
+            title: "Error loading resume",
+            description: "Could not load the selected resume. Please try again.",
+            variant: "destructive",
+          });
+          setCurrentStep(1); // Fallback to contact step
+        } finally {
+          setIsResumeLoading(false);
+        }
+      };
+      fetchResume();
+    } else {
+      const templateToSet = initialTemplate || initialCvTemplate;
+      if (templateToSet) {
+        fetch('/api/auth/me', { credentials: 'include' })
+          .then(r => r.ok ? r.json() : null)
+          .then(d => {
+            const allTemplates = [...resumeTemplates, ...cvTemplates]; 
+            const tpl = allTemplates.find(t => t.id === templateToSet); 
+            const isPrem = tpl && ('premium' in tpl) && (tpl as any).premium;
+            if (isPrem && d?.accountTier !== 'premium') return;
+            setTemplate(templateToSet);
+          })
+          .catch(() => setTemplate(templateToSet));
+      }
+      if (initialColor) {
+        setColor(initialColor);
+      }
     }
-    if (initialColor) {
-      setColor(initialColor);
-    }
-  }, [initialTemplate, initialColor, setTemplate, setColor]);
+  }, [resumeId, initialTemplate, initialCvTemplate, initialColor, setResumeData, setTemplate, setColor, toast]);
 
   const progress = ((currentStep + 1) / steps.length) * 100;
+  const [showPreview, setShowPreview] = useState(true);
+
+  // Mutation for saving/updating resume
+  const saveResumeMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        title: resumeData.contactInfo?.firstName ? `${resumeData.contactInfo.firstName}'s Resume` : 'Untitled Resume',
+        data: resumeData,
+        templateId: resumeData.templateId,
+        colorId: resumeData.colorId,
+      };
+      if (resumeId) {
+        // Update existing resume
+        return apiRequest('PATCH', `/api/resumes/${resumeId}`, payload);
+      } else {
+        // Create new resume
+        return apiRequest('POST', '/api/resumes', payload);
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['myResumes'] }); // Invalidate resume list to show new/updated resume
+      toast({
+        title: "Resume saved!",
+        description: resumeId ? "Your resume has been updated." : "Your resume has been saved.",
+      });
+      // If new resume, update URL to reflect its ID
+      if (!resumeId && data?.id) {
+        // Wouter's navigate is needed here, but for simplicity, we'll let a full page reload happen
+        // Ideally: navigate(`/builder?resumeId=${data.id}`, { replace: true });
+        // For now, a refresh or manual navigation is implied.
+      }
+    },
+    onError: (error: any) => {
+      console.error("Error saving resume:", error);
+      toast({
+        title: "Error saving resume",
+        description: error.message || "Failed to save your resume. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  if (isResumeLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+        Loading Resume...
+      </div>
+    );
+  }
 
   const goToNext = () => {
     if (currentStep < steps.length - 1) {
@@ -83,13 +142,18 @@ function BuilderContent() {
   };
 
   const goToStep = (index: number) => {
-    if (index <= currentStep) {
-      setCurrentStep(index);
+    // Allow jumping to any step if not in upload mode or if upload step is completed
+    if (!uploadMode || currentStep > 0 || index === 0) { // Allow navigation to upload step
+      if (index <= currentStep || (index > currentStep && currentStep === 0 && uploadMode)) { // Allow moving forward from upload step
+        setCurrentStep(index);
+      }
     }
   };
 
   const renderStep = () => {
     switch (steps[currentStep].id) {
+      case "upload":
+        return <UploadStep onNext={goToNext} documentType={documentType} />;
       case "contact":
         return <ContactStep onNext={goToNext} />;
       case "summary":
@@ -103,7 +167,7 @@ function BuilderContent() {
       case "certifications":
         return <CertificationsStep onNext={goToNext} onBack={goBack} />;
       case "template":
-        return <TemplateStep onNext={goToNext} onBack={goBack} />;
+        return <TemplateStep onNext={goToNext} onBack={goBack} documentType={documentType} />;
       case "download":
         return <DownloadStep onBack={goBack} />;
       default:
@@ -131,6 +195,19 @@ function BuilderContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Save Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => saveResumeMutation.mutate()}
+              disabled={saveResumeMutation.isPending || isResumeLoading}
+              className="gap-2"
+              data-testid="button-save-resume"
+            >
+              {saveResumeMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Save className="w-4 h-4" />
+              Save Resume
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -269,4 +346,4 @@ export default function Builder() {
     </ResumeProvider>
   );
 }
-import { resumeTemplates } from "@shared/schema";
+

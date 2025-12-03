@@ -1,17 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { requireAuth } from "./auth";
 import { resumeDataSchema, templateColors } from "@shared/schema";
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   
-  // Initialize OpenAI client (if API key is available)
-  const openai = process.env.OPENAI_API_KEY 
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  const genAI = process.env.GEMINI_API_KEY
+    ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string)
     : null;
 
   // Generate AI summary
@@ -19,7 +19,7 @@ export async function registerRoutes(
     try {
       const { contactInfo, experiences, skills } = req.body;
 
-      if (!openai) {
+      if (!genAI) {
         // Return a placeholder summary if no OpenAI key
         const name = contactInfo?.firstName ? `${contactInfo.firstName}` : "A professional";
         const jobTitle = experiences?.[0]?.jobTitle || "experienced professional";
@@ -30,35 +30,12 @@ export async function registerRoutes(
         });
       }
 
-      // Build context for AI
-      const experienceList = experiences?.map((exp: any) => 
-        `${exp.jobTitle} at ${exp.company}`
-      ).join(", ") || "";
-      
+      const experienceList = experiences?.map((exp: any) => `${exp.jobTitle} at ${exp.company}`).join(", ") || "";
       const skillList = skills?.map((s: any) => s.name).join(", ") || "";
-
-      // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
-      const response = await openai.chat.completions.create({
-        model: "gpt-5",
-        messages: [
-          {
-            role: "system",
-            content: "You are a professional resume writer. Generate a concise, impactful 2-3 sentence professional summary for a resume. Focus on key achievements, skills, and value proposition. Write in first person implied (no 'I' statements). Make it compelling and tailored to the person's background."
-          },
-          {
-            role: "user",
-            content: `Write a professional summary for someone with the following background:
-            Name: ${contactInfo?.firstName || ""} ${contactInfo?.lastName || ""}
-            Experience: ${experienceList || "Various professional roles"}
-            Skills: ${skillList || "Various professional skills"}
-            
-            Generate only the summary text, no quotes or additional formatting.`
-          }
-        ],
-        max_completion_tokens: 200,
-      });
-
-      const summary = response.choices[0]?.message?.content || "";
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const prompt = `You are a professional resume writer. Generate a concise, impactful 2-3 sentence professional summary for a resume. Focus on key achievements, skills, and value proposition. Write in first person implied (no 'I' statements). Make it compelling and tailored to the person's background.\n\nName: ${contactInfo?.firstName || ""} ${contactInfo?.lastName || ""}\nExperience: ${experienceList || "Various professional roles"}\nSkills: ${skillList || "Various professional skills"}\n\nGenerate only the summary text, no quotes or additional formatting.`;
+      const response = await model.generateContent(prompt);
+      const summary = response.response.text() || "";
       res.json({ summary });
     } catch (error) {
       console.error("Error generating summary:", error);
@@ -145,13 +122,24 @@ export async function registerRoutes(
         data,
         templateId: templateId || "clean",
         colorId: colorId || "orange",
-        userId: userId || null,
+        userId: (req.user as any)?.id || userId || null,
       });
 
       res.json(resume);
     } catch (error) {
       console.error("Error saving resume:", error);
       res.status(500).json({ error: "Failed to save resume" });
+    }
+  });
+
+  app.get("/api/resumes", requireAuth, async (req, res) => {
+    try {
+      const userId = (req.user as any)?.id;
+      const resumes = await storage.getResumesByUserId(userId);
+      res.json(resumes);
+    } catch (error) {
+      console.error("Error listing resumes:", error);
+      res.status(500).json({ error: "Failed to list resumes" });
     }
   });
 

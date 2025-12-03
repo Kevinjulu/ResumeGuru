@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { setupAuth, registerAuthRoutes } from "./auth";
+import { registerBillingRoutes } from "./billing";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +62,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  setupAuth(app);
+  registerAuthRoutes(app);
+  registerBillingRoutes(app);
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -85,14 +90,14 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
-    },
-  );
+  const options: any = {
+    port,
+    host: "0.0.0.0",
+  };
+  if (process.platform !== "win32") {
+    options.reusePort = true;
+  }
+  httpServer.listen(options, () => {
+    log(`serving on port ${port}`);
+  });
 })();

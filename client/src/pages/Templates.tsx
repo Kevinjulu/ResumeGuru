@@ -159,7 +159,7 @@ export default function Templates() {
 }
 
 function TemplateCard({ template }: { template: typeof resumeTemplates[number] }) {
-  const [selectedColor, setSelectedColor] = useState(templateColors[0]);
+  const [selectedColor, setSelectedColor] = useState<typeof templateColors[number]>(templateColors[0]);
 
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300" data-testid={`card-template-${template.id}`}>
@@ -199,6 +199,9 @@ function TemplateCard({ template }: { template: typeof resumeTemplates[number] }
             {template.style}
           </Badge>
         </div>
+        {('premium' in template) && (template as any).premium && (
+          <div className="mb-2"><Badge className="text-xs">Premium</Badge></div>
+        )}
         <p className="text-sm text-gray-500 mb-3 line-clamp-2">{template.description}</p>
         
         <div className="flex items-center justify-between">

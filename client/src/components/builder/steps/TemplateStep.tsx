@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { resumeTemplates, templateColors } from "@shared/schema";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 interface TemplateStepProps {
   onNext: () => void;
@@ -12,7 +13,63 @@ interface TemplateStepProps {
 }
 
 export function TemplateStep({ onNext, onBack }: TemplateStepProps) {
-  const { resumeData, setTemplate, setColor } = useResume();
+  const { resumeData, setTemplate, setColor, setLayoutVariant, setSectionOrder } = useResume();
+  const [userTier, setUserTier] = useState<'free'|'premium'>('free');
+  useEffect(() => {
+    fetch('/api/auth/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.accountTier) setUserTier(d.accountTier); })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (userTier === 'premium') return;
+    (async () => {
+      const cfgRes = await fetch('/api/billing/config', { credentials: 'include' });
+      const cfg = await cfgRes.json();
+      if (!cfg.clientId) return;
+      if (!(window as any).paypal) {
+        const script = document.createElement('script');
+        script.src = `https://www.paypal.com/sdk/js?client-id=${cfg.clientId}&currency=${cfg.currency}`;
+        script.onload = () => {
+          (window as any).paypal.Buttons({
+            createOrder: async () => {
+              const r = await fetch('/api/billing/paypal/create-order', { method: 'POST', credentials: 'include' });
+              const j = await r.json();
+              return j.id;
+            },
+            onApprove: async (data: any) => {
+              await fetch('/api/billing/paypal/capture-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId: data.orderID }),
+                credentials: 'include',
+              });
+              setUserTier('premium');
+            },
+          }).render('#paypal-upgrade-button');
+        };
+        document.body.appendChild(script);
+      } else {
+        (window as any).paypal.Buttons({
+          createOrder: async () => {
+            const r = await fetch('/api/billing/paypal/create-order', { method: 'POST', credentials: 'include' });
+            const j = await r.json();
+            return j.id;
+          },
+          onApprove: async (data: any) => {
+            await fetch('/api/billing/paypal/capture-order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId: data.orderID }),
+              credentials: 'include',
+            });
+            setUserTier('premium');
+          },
+        }).render('#paypal-upgrade-button');
+      }
+    })();
+  }, [userTier]);
 
   return (
     <div className="space-y-6">
@@ -67,7 +124,10 @@ export function TemplateStep({ onNext, onBack }: TemplateStepProps) {
                       ? "ring-2 ring-primary shadow-lg"
                       : "hover:shadow-md hover:border-gray-300"
                   }`}
-                  onClick={() => setTemplate(template.id)}
+                  onClick={() => {
+                    if ((('premium' in template) && (template as any).premium) && userTier !== 'premium') return;
+                    setTemplate(template.id);
+                  }}
                   data-testid={`card-template-select-${template.id}`}
                 >
                   <div className="aspect-[8.5/11] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
@@ -100,6 +160,9 @@ export function TemplateStep({ onNext, onBack }: TemplateStepProps) {
                     <Badge variant="secondary" className="mt-1 text-xs capitalize">
                       {template.style}
                     </Badge>
+                    {('premium' in template) && (template as any).premium && (
+                      <div className="mt-1"><Badge className="text-xs">Premium</Badge></div>
+                    )}
                   </div>
                 </Card>
               </motion.div>
@@ -108,12 +171,47 @@ export function TemplateStep({ onNext, onBack }: TemplateStepProps) {
         </div>
       </div>
 
+      {(resumeData.templateId === 'compact' || resumeData.templateId === 'sidebar-pro') && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Layout Options</h3>
+          <div className="flex gap-2">
+            <Button variant={resumeData.layoutVariant === 'single' ? 'default' : 'outline'} size="sm" onClick={() => setLayoutVariant('single')}>Single Column</Button>
+            <Button variant={resumeData.layoutVariant === 'double' ? 'default' : 'outline'} size="sm" onClick={() => setLayoutVariant('double')}>Two Columns</Button>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 mb-2">Section Order</h3>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" onClick={() => setSectionOrder(["summary","experience","education","skills","certifications"])}>Standard</Button>
+          <Button size="sm" variant="outline" onClick={() => setSectionOrder(["experience","summary","education","skills","certifications"])}>Experience First</Button>
+          <Button size="sm" variant="outline" onClick={() => setSectionOrder(["summary","skills","experience","education","certifications"])}>Skills Early</Button>
+        </div>
+      </div>
+
+      {userTier !== 'premium' && (
+        <div className="p-4 border rounded-lg bg-yellow-50 border-yellow-100">
+          <div className="flex items-start justify-between gap-4">
+            <span className="text-sm text-yellow-900">Upgrade to Premium to use premium templates</span>
+            <div className="space-y-2">
+              <div id="paypal-upgrade-button" />
+              <Button size="sm" variant="outline" onClick={() => {
+                fetch('/api/billing/upgrade', { method: 'POST', credentials: 'include' })
+                  .then(r => r.json())
+                  .then(d => { if (d?.accountTier === 'premium') setUserTier('premium'); });
+              }}>Manual Upgrade (Dev)</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between pt-4">
         <Button type="button" variant="outline" onClick={onBack} className="gap-2" data-testid="button-back-template">
           <ArrowLeft className="w-4 h-4" />
           Back
         </Button>
-        <Button type="button" onClick={onNext} className="gap-2" data-testid="button-next-template">
+        <Button type="button" onClick={onNext} className="gap-2" data-testid="button-next-template" disabled={(resumeData.templateId && (('premium' in (resumeTemplates.find(t=>t.id===resumeData.templateId) || {})) && (resumeTemplates.find(t=>t.id===resumeData.templateId) as any).premium) && userTier!=='premium')}>
           Continue to Download
           <ArrowRight className="w-4 h-4" />
         </Button>

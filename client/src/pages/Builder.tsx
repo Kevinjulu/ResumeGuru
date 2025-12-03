@@ -53,7 +53,15 @@ function BuilderContent() {
 
   useEffect(() => {
     if (initialTemplate) {
-      setTemplate(initialTemplate);
+      fetch('/api/auth/me', { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const tpl = resumeTemplates.find(t => t.id === initialTemplate);
+          const isPrem = tpl && ('premium' in tpl) && (tpl as any).premium;
+          if (isPrem && d?.accountTier !== 'premium') return;
+          setTemplate(initialTemplate);
+        })
+        .catch(() => setTemplate(initialTemplate));
     }
     if (initialColor) {
       setColor(initialColor);
@@ -261,3 +269,4 @@ export default function Builder() {
     </ResumeProvider>
   );
 }
+import { resumeTemplates } from "@shared/schema";

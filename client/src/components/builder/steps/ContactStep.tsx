@@ -48,8 +48,8 @@ export function ContactStep({ onNext }: ContactStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Contact Information</h2>
-        <p className="text-gray-600 mt-1">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">Contact Information</h2>
+        <p className="text-gray-300 mt-2 text-sm leading-relaxed">
           Let employers know how to reach you. This information will appear at the top of your resume.
         </p>
       </div>

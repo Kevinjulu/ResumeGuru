@@ -286,3 +286,75 @@
     inset: -1px;
   }
 }
+
+/* Custom animations and utilities */
+@layer utilities {
+  /* Glassmorphism effect */
+  .glassmorphism {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+
+  .glassmorphism-dark {
+    @apply bg-slate-900/20 backdrop-blur-md border border-white/10;
+  }
+
+  /* Smooth gradients */
+  .gradient-primary {
+    @apply bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500;
+  }
+
+  .gradient-text-primary {
+    @apply bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent;
+  }
+
+  /* Animated background */
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Smooth floating animation */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Glow effect */
+  .glow-blue {
+    @apply shadow-lg shadow-blue-500/25;
+  }
+
+  .glow-purple {
+    @apply shadow-lg shadow-purple-500/25;
+  }
+
+  /* Delay animations */
+  .delay-1000 {
+    animation-delay: 1s;
+  }
+
+  .delay-2000 {
+    animation-delay: 2s;
+  }
+}
+

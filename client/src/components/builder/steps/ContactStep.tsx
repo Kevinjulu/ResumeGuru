@@ -48,8 +48,8 @@ export function ContactStep({ onNext }: ContactStepProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 gradient-text-primary">Contact Information</h2>
-        <p className="text-gray-600 mt-1">
+        <h2 className="text-3xl font-bold text-gray-900 gradient-text-primary">Contact Information</h2>
+        <p className="text-gray-600 mt-2 max-w-xl">
           Let employers know how to reach you. This information will appear at the top of your resume.
         </p>
       </div>
@@ -62,12 +62,12 @@ export function ContactStep({ onNext }: ContactStepProps) {
               name="firstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex items-center gap-2">
+                  <FormLabel className="flex items-center gap-2 text-sm font-medium">
                     <User className="w-4 h-4" />
                     First Name
                   </FormLabel>
                   <FormControl>
-                    <div className="bg-white/80 border border-gray-200 rounded-md p-1">
+                    <div className="input-glass">
                       <Input
                         placeholder="John"
                         {...field}

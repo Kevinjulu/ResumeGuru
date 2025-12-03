@@ -231,7 +231,7 @@ function BuilderContent() {
         <main className="flex-1 flex">
           <div className={`flex-1 ${showPreview ? "lg:w-1/2" : "w-full"}`}>
             <ScrollArea className="h-[calc(100vh-88px)]">
-              <div className="max-w-2xl mx-auto p-6">
+              <div className="max-w-3xl mx-auto p-6 md:p-10">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentStep}
@@ -240,7 +240,9 @@ function BuilderContent() {
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {renderStep()}
+                    <div className="glass-light rounded-2xl p-6 md:p-8 border border-gray-100">
+                      {renderStep()}
+                    </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
@@ -248,10 +250,12 @@ function BuilderContent() {
           </div>
 
           {showPreview && (
-            <div className="hidden lg:block w-1/2 bg-gray-100 border-l border-gray-200 p-8 sticky top-[88px] h-[calc(100vh-88px)] overflow-y-auto">
+            <div className="hidden lg:block w-1/2 p-8 sticky top-[88px] h-[calc(100vh-88px)] overflow-y-auto">
               <div className="max-w-md mx-auto">
-                <h3 className="text-sm font-medium text-gray-500 mb-4 text-center">Live Preview</h3>
-                <ResumePreview />
+                <div className="preview-title">Live Preview</div>
+                <div className="resume-frame shadow-sm">
+                  <ResumePreview />
+                </div>
               </div>
             </div>
           )}

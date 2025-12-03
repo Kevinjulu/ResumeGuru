@@ -119,6 +119,38 @@
   }
 }
 
+/* Base typography and preview frame */
+html, body {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+@layer utilities {
+  .resume-frame {
+    background: var(--card);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .preview-title {
+    font-weight: 600;
+    color: var(--muted-foreground);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .input-glass {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: .35rem .5rem;
+    border-radius: .5rem;
+  }
+}
+
 .dark {
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);

@@ -245,7 +245,7 @@ export function ExperienceStep({ onNext, onBack }: ExperienceStepProps) {
                     <DialogTitle>Choose Bullet Points</DialogTitle>
                   </DialogHeader>
                   <div className="mb-4">
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <Select value={selectedCategory} onOnValueChange={setSelectedCategory}>
                       <SelectTrigger data-testid="select-bullet-category">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>

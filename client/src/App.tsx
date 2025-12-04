@@ -23,6 +23,26 @@ const CoverLetterBuilder = React.lazy(() => import("@/pages/CoverLetterBuilder")
 const MyCoverLetters = React.lazy(() => import("@/pages/MyCoverLetters")); // Lazy load MyCoverLetters
 const CoverLetterTemplates = React.lazy(() => import("@/pages/CoverLetterTemplates"));
 const Checkout = React.lazy(() => import("@/pages/Checkout"));
+const TemplatesResumes = React.lazy(() => import("@/pages/TemplatesResumes"));
+const TemplatesResumesPdf = React.lazy(() => import("@/pages/TemplatesResumesPdf"));
+const TemplatesResumesWord = React.lazy(() => import("@/pages/TemplatesResumesWord"));
+const ExamplesResumes = React.lazy(() => import("@/pages/ExamplesResumes"));
+const GuidesResumeFormat = React.lazy(() => import("@/pages/GuidesResumeFormat"));
+const GuidesResumeWriting = React.lazy(() => import("@/pages/GuidesResumeWriting"));
+const TemplatesCoverLetters = React.lazy(() => import("@/pages/TemplatesCoverLetters"));
+const TemplatesCoverLettersWord = React.lazy(() => import("@/pages/TemplatesCoverLettersWord"));
+const ExamplesCoverLetters = React.lazy(() => import("@/pages/ExamplesCoverLetters"));
+const GuidesCoverLetter = React.lazy(() => import("@/pages/GuidesCoverLetter"));
+const TemplatesAtsFriendly = React.lazy(() => import("@/pages/TemplatesAtsFriendly"));
+const TemplatesCategories = React.lazy(() => import("@/pages/TemplatesCategories"));
+const ExamplesIndustry = React.lazy(() => import("@/pages/ExamplesIndustry"));
+const BlogResumeHelp = React.lazy(() => import("@/pages/BlogResumeHelp"));
+const BlogCoverLetterHelp = React.lazy(() => import("@/pages/BlogCoverLetterHelp"));
+const BlogJobSearch = React.lazy(() => import("@/pages/BlogJobSearch"));
+const BlogSpecializedGuides = React.lazy(() => import("@/pages/BlogSpecializedGuides"));
+const SupportFaq = React.lazy(() => import("@/pages/SupportFaq"));
+const SupportContact = React.lazy(() => import("@/pages/SupportContact"));
+const SupportBilling = React.lazy(() => import("@/pages/SupportBilling"));
 
 const convexUrl = (import.meta.env.VITE_CONVEX_URL as string | undefined) || undefined;
 let convex: ReturnType<typeof ConvexReactClient> | null = null;
@@ -60,6 +80,26 @@ function Router() {
       <Route path="/cover-letter-builder" component={CoverLetterBuilder} /> // Add route for CoverLetterBuilder
       <Route path="/my-cover-letters" component={MyCoverLetters} /> // Add route for MyCoverLetters
       <Route path="/cover-letter-templates" component={CoverLetterTemplates} />
+      <Route path="/templates/resumes" component={TemplatesResumes} />
+      <Route path="/templates/resumes/pdf" component={TemplatesResumesPdf} />
+      <Route path="/templates/resumes/word" component={TemplatesResumesWord} />
+      <Route path="/examples/resumes" component={ExamplesResumes} />
+      <Route path="/guides/resume-format" component={GuidesResumeFormat} />
+      <Route path="/guides/resume-writing" component={GuidesResumeWriting} />
+      <Route path="/templates/cover-letters" component={TemplatesCoverLetters} />
+      <Route path="/templates/cover-letters/word" component={TemplatesCoverLettersWord} />
+      <Route path="/examples/cover-letters" component={ExamplesCoverLetters} />
+      <Route path="/guides/cover-letter" component={GuidesCoverLetter} />
+      <Route path="/templates/ats-friendly" component={TemplatesAtsFriendly} />
+      <Route path="/templates/categories" component={TemplatesCategories} />
+      <Route path="/examples/industry" component={ExamplesIndustry} />
+      <Route path="/blog/resume-help" component={BlogResumeHelp} />
+      <Route path="/blog/cover-letter-help" component={BlogCoverLetterHelp} />
+      <Route path="/blog/job-search" component={BlogJobSearch} />
+      <Route path="/blog/specialized-guides" component={BlogSpecializedGuides} />
+      <Route path="/support/faq" component={SupportFaq} />
+      <Route path="/support/contact" component={SupportContact} />
+      <Route path="/support/billing" component={SupportBilling} />
       <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>

@@ -427,54 +427,147 @@ export const prewrittenSkills: Record<string, string[]> = {
   ],
 };
 
-// Pricing Plans
+// Pricing Plans - Updated Structure with Strict Feature Enforcement
 export const pricingPlans = [
   {
     id: "free",
     name: "Free",
     price: 0,
     period: "forever",
+    popular: false,
+    // Free Plan Features
     features: [
       "1 Resume",
-      "3 Templates",
-      "Basic formatting",
-      "TXT download only",
+      "3 Basic Templates",
+      "Text Formatting",
+      "TXT Download",
+      "Online Editor",
     ],
-    limitations: ["No AI features", "No PDF/Word export", "Watermark on downloads"],
-    popular: false,
+    // Features NOT available in Free plan
+    limitations: [
+      "No PDF/Word Export",
+      "No AI Features",
+      "Watermark on Downloads",
+      "No Cover Letters",
+      "No Priority Support",
+      "Limited Templates",
+    ],
+    // Strict Feature Gating
+    access: {
+      maxResumes: 1,
+      maxTemplates: 3,
+      aiFeatures: false,
+      pdfExport: false,
+      wordExport: false,
+      coverLetters: false,
+      prioritySupport: false,
+      linkedinOptimization: false,
+      atsCompatibility: false,
+      resumeReview: false,
+      watermark: true,
+    },
   },
   {
     id: "pro",
     name: "Pro",
-    price: 7.95,
+    price: 2,
     period: "month",
+    popular: true,
+    // Pro Plan Features (includes all Free features + Pro additions)
     features: [
+      "Everything in Free",
       "Unlimited Resumes",
       "All 10+ Templates",
+      "PDF & Word Export",
+      "No Watermark",
       "AI Summary Generator",
-      "PDF & Word downloads",
-      "No watermarks",
-      "Color customization",
+      "Color Customization",
+      "Keyword Optimization",
     ],
-    limitations: [],
-    popular: true,
+    limitations: [
+      "No Cover Letters",
+      "No Priority Support",
+      "No LinkedIn Optimization",
+      "No Resume Review",
+    ],
+    // Strict Feature Gating
+    access: {
+      maxResumes: 999,
+      maxTemplates: 999,
+      aiFeatures: true,
+      pdfExport: true,
+      wordExport: true,
+      coverLetters: false,
+      prioritySupport: false,
+      linkedinOptimization: false,
+      atsCompatibility: true,
+      resumeReview: false,
+      watermark: false,
+    },
   },
   {
     id: "premium",
     name: "Premium",
-    price: 24.95,
-    period: "3 months",
+    price: 7,
+    period: "month",
+    popular: false,
+    // Premium Plan Features (includes all Pro features + Premium additions)
     features: [
       "Everything in Pro",
-      "Cover letter builder",
-      "Priority support",
-      "LinkedIn optimization",
-      "ATS compatibility check",
-      "1-on-1 resume review",
+      "Cover Letter Builder",
+      "Unlimited Cover Letters",
+      "Priority Support (24/7)",
+      "LinkedIn Profile Optimizer",
+      "ATS Compatibility Report",
+      "Expert Resume Review",
+      "Advanced Analytics",
+      "Custom Domain",
+      "Portfolio Website",
     ],
     limitations: [],
-    popular: false,
+    // Strict Feature Gating
+    access: {
+      maxResumes: 999,
+      maxTemplates: 999,
+      aiFeatures: true,
+      pdfExport: true,
+      wordExport: true,
+      coverLetters: true,
+      prioritySupport: true,
+      linkedinOptimization: true,
+      atsCompatibility: true,
+      resumeReview: true,
+      watermark: false,
+    },
   },
 ] as const;
 
 export type PricingPlan = typeof pricingPlans[number];
+
+// Feature Access Helper - Strict enforcement
+export function hasFeatureAccess(planId: string, feature: keyof (typeof pricingPlans)[number]['access']): boolean {
+  const plan = pricingPlans.find(p => p.id === planId);
+  if (!plan) return false;
+  return plan.access[feature];
+}
+
+// Get plan by ID
+export function getPlanById(planId: string) {
+  return pricingPlans.find(p => p.id === planId);
+}
+
+// Feature comparison matrix for detailed display
+export const featureComparisonMatrix = [
+  { name: "Resumes", category: "Core" },
+  { name: "Templates", category: "Core" },
+  { name: "PDF/Word Export", category: "Export" },
+  { name: "No Watermark", category: "Export" },
+  { name: "AI Summary Generator", category: "AI" },
+  { name: "Keyword Optimization", category: "AI" },
+  { name: "ATS Compatibility Check", category: "AI" },
+  { name: "Cover Letter Builder", category: "Advanced" },
+  { name: "LinkedIn Optimization", category: "Advanced" },
+  { name: "Priority Support", category: "Support" },
+  { name: "Expert Resume Review", category: "Support" },
+  { name: "Portfolio Website", category: "Advanced" },
+] as const;

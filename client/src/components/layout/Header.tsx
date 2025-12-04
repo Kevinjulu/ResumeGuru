@@ -12,7 +12,8 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, FileText, Briefcase, GraduationCap, BookOpen, DollarSign, ListRestart, MailOpen } from "lucide-react"; // Import MailOpen
+import { Menu } from "lucide-react";
+import { navItems } from "@/lib/navigation";
 
 export function Header() {
   const [location, setLocation] = useLocation();
@@ -41,22 +42,7 @@ export function Header() {
     },
   });
 
-  const navItems = [
-    {
-      label: "Builders",
-      items: [
-        { label: "Resume Builder", href: "/builder", icon: FileText, description: "Build your resume step by step" },
-        { label: "Cover Letter Builder", href: "/cover-letter-builder", icon: Briefcase, description: "Create matching cover letters" }, // Updated href
-      ],
-    },
-    { label: "Resumes", href: "/templates" },
-    { label: "My Resumes", href: "/my-resumes", icon: ListRestart },
-    { label: "Cover Letters", href: "/cover-letter-templates" }, // This should be a link to CL templates
-    { label: "My Cover Letters", href: "/my-cover-letters", icon: MailOpen }, // New item
-    { label: "CVs", href: "/cvs" },
-    { label: "Resources", href: "/resources" },
-    { label: "Pricing", href: "/pricing" },
-  ];
+  
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">

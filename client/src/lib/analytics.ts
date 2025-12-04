@@ -13,8 +13,10 @@ export function trackEvent(event: AnalyticsEvent) {
   try {
     // Send to custom backend endpoint if available
     if (typeof window !== 'undefined' && window.fetch) {
-      // Log locally for now
-      console.log('[Analytics]', event.name, event.properties);
+      // Log locally for now (only log if properties exist to reduce console noise)
+      if (event.properties && Object.keys(event.properties).length > 0) {
+        console.log('[Analytics]', event.name, event.properties);
+      }
 
       // If you integrate GA, Mixpanel, Segment, etc., add here:
       // gtag('event', event.name, event.properties);
@@ -27,17 +29,17 @@ export function trackEvent(event: AnalyticsEvent) {
 
 // Pricing page events
 export const pricingEvents = {
-  pageViewed: () => trackEvent({ name: 'pricing_page_viewed' }),
+  pageViewed: (source?: string) => trackEvent({ name: 'pricing_page_viewed', properties: source ? { source } : {} }),
   planCardClicked: (plan: string) => trackEvent({ name: 'plan_card_clicked', properties: { plan } }),
-  comparisontTableViewed: () => trackEvent({ name: 'comparison_table_viewed' }),
+  comparisonTableViewed: (scrollPosition?: number) => trackEvent({ name: 'comparison_table_viewed', properties: scrollPosition !== undefined ? { scrollPosition } : {} }),
   faqAccordionOpened: (question: string) => trackEvent({ name: 'faq_opened', properties: { question } }),
   ctaButtonClicked: (plan: string) => trackEvent({ name: 'cta_button_clicked', properties: { plan } }),
 };
 
 // Checkout events
 export const checkoutEvents = {
-  pageViewed: (plan: string) => trackEvent({ name: 'checkout_page_viewed', properties: { plan } }),
-  orderCreationStarted: (plan: string) => trackEvent({ name: 'order_creation_started', properties: { plan } }),
+  pageViewed: (plan?: string) => trackEvent({ name: 'checkout_page_viewed', properties: plan ? { plan } : {} }),
+  orderCreationStarted: (plan?: string) => trackEvent({ name: 'order_creation_started', properties: plan ? { plan } : {} }),
   orderCreationFailed: (plan: string, error: string) => trackEvent({ name: 'order_creation_failed', properties: { plan, error } }),
   paypalRedirectInitiated: (orderId: string, plan: string) => trackEvent({ name: 'paypal_redirect_initiated', properties: { orderId, plan } }),
   checkoutCompleted: (orderId: string, plan: string, amount: number) => trackEvent({ name: 'checkout_completed', properties: { orderId, plan, amount } }),

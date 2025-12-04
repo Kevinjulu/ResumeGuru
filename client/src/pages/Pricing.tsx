@@ -13,10 +13,16 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Check, X, Sparkles, Shield, Clock, HeadphonesIcon, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { pricingEvents } from "@/lib/analytics";
 
 export default function Pricing() {
   const [selectedPlan, setSelectedPlan] = useState("pro");
+  
+  // Track page view on mount
+  useEffect(() => {
+    pricingEvents.pageViewed();
+  }, []);
   
   const faqs = [
     {
@@ -146,6 +152,7 @@ export default function Pricing() {
                       {/* CTA Button */}
                       <Link href={plan.id === "free" ? "/builder" : `/checkout?plan=${plan.id}`}>
                         <Button 
+                          onClick={() => pricingEvents.ctaButtonClicked(plan.id)}
                           className={`w-full flex items-center justify-center gap-2 transition-all duration-300 ${
                             plan.popular 
                               ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 text-white" 
@@ -195,6 +202,7 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
+              onAnimationComplete={() => pricingEvents.comparisontTableViewed()}
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 Detailed Feature Comparison
@@ -214,10 +222,10 @@ export default function Pricing() {
               <table className="w-full bg-white rounded-lg overflow-hidden shadow-md border border-gray-200">
                 <thead className="bg-gray-900 text-white">
                   <tr>
-                    <th className="px-6 py-4 text-left font-semibold">Feature</th>
-                    <th className="px-6 py-4 text-center font-semibold">Free</th>
-                    <th className="px-6 py-4 text-center font-semibold bg-primary/10">Pro</th>
-                    <th className="px-6 py-4 text-center font-semibold">Premium</th>
+                    <th className="px-6 py-4 text-left font-semibold" scope="col">Feature</th>
+                    <th className="px-6 py-4 text-center font-semibold" scope="col" aria-label="Available in Free plan">Free</th>
+                    <th className="px-6 py-4 text-center font-semibold bg-primary/10" scope="col" aria-label="Available in Pro plan">Pro</th>
+                    <th className="px-6 py-4 text-center font-semibold" scope="col" aria-label="Available in Premium plan">Premium</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -323,7 +331,11 @@ export default function Pricing() {
             <Accordion type="single" collapsible className="w-full">
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`} className="bg-white mb-2 rounded-lg border">
-                  <AccordionTrigger className="px-6 text-left font-medium hover:no-underline" data-testid={`faq-${index}`}>
+                  <AccordionTrigger 
+                    className="px-6 text-left font-medium hover:no-underline" 
+                    data-testid={`faq-${index}`}
+                    onClick={() => pricingEvents.faqAccordionOpened(faq.question)}
+                  >
                     {faq.question}
                   </AccordionTrigger>
                   <AccordionContent className="px-6 pb-4 text-gray-600">

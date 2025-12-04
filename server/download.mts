@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { requireFeature } from './middleware/featureGate.mts';
 import { ResumeData } from '../shared/schema';
 import puppeteer from 'puppeteer';
 import { Document, Paragraph, TextRun, Packer, SectionBreak, HeadingLevel, AlignmentType } from 'docx'; // Import DOCX modules
@@ -96,7 +97,7 @@ async function renderResumeToHtml(resumeData: ResumeData): Promise<string> {
     `;
 }
 
-downloadRouter.post('/pdf', async (req: Request, res: Response) => {
+downloadRouter.post('/pdf', requireFeature('pdfExport'), async (req: Request, res: Response) => {
     const resumeData: ResumeData = req.body;
 
     if (!resumeData) {
@@ -123,7 +124,7 @@ downloadRouter.post('/pdf', async (req: Request, res: Response) => {
     }
 });
 
-downloadRouter.post('/docx', async (req: Request, res: Response) => {
+downloadRouter.post('/docx', requireFeature('wordExport'), async (req: Request, res: Response) => {
     const resumeData: ResumeData = req.body;
 
     if (!resumeData) {
@@ -421,7 +422,7 @@ function generateCoverLetterPlainText(coverLetterData: CoverLetterData): string 
 }
 
 // Cover Letter Endpoints
-downloadRouter.post('/cover-letter/pdf', async (req: Request, res: Response) => {
+downloadRouter.post('/cover-letter/pdf', requireFeature('pdfExport'), async (req: Request, res: Response) => {
     const coverLetterData: CoverLetterData = req.body;
 
     if (!coverLetterData) {
@@ -448,7 +449,7 @@ downloadRouter.post('/cover-letter/pdf', async (req: Request, res: Response) => 
     }
 });
 
-downloadRouter.post('/cover-letter/docx', async (req: Request, res: Response) => {
+downloadRouter.post('/cover-letter/docx', requireFeature('wordExport'), async (req: Request, res: Response) => {
     const coverLetterData: CoverLetterData = req.body;
 
     if (!coverLetterData) {

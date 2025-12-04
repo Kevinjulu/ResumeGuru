@@ -71,15 +71,60 @@ export function registerBillingRoutes(app: Express) {
       const tier = (req.body && req.body.tier) || 'premium';
       const amountCents = getTierAmountCents(tier);
       if (!amountCents || amountCents <= 0) return res.status(400).json({ error: 'Invalid tier' });
+      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+      const returnUrl = `${origin}/checkout?status=success&orderId=${Math.random().toString(36).slice(2)}`;
+      const cancelUrl = `${origin}/checkout?status=cancel`;
+
       request.requestBody({
         intent: 'CAPTURE',
+        application_context: {
+          return_url: returnUrl,
+          cancel_url: cancelUrl,
+        },
         purchase_units: [{ amount: { currency_code: 'USD', value: (amountCents / 100).toFixed(2) } }],
       });
+
       const order = await client.execute(request);
       await storage.addPaymentAudit({ endpoint: '/api/billing/paypal/create-order', userId: (req.user as any)?.id || null, payloadEncrypted: encryptJSON(order.result) });
-      res.json({ id: order.result.id });
+
+      // Find approval link
+      const approveLink = (order.result.links || []).find((l: any) => l.rel === 'approve')?.href;
+      res.json({ id: order.result.id, approveUrl: approveLink });
     } catch (e) {
       res.status(500).json({ error: 'Failed to create PayPal order' });
+    }
+  });
+
+  // Webhook endpoint for PayPal events. Note: for production, verify webhook signature using PayPal SDK and WEBHOOK_ID.
+  app.post('/api/billing/paypal/webhook', async (req, res) => {
+    try {
+      const event = req.body;
+      // Audit raw payload
+      await storage.addPaymentAudit({ endpoint: '/api/billing/paypal/webhook', userId: null, payloadEncrypted: encryptJSON(event) });
+
+      // Handle payment capture completed events
+      const eventType = event.event_type || event.type || '';
+      if (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'CHECKOUT.ORDER.APPROVED') {
+        // Attempt to extract order id and payer info
+        const resource = event.resource || {};
+        const orderId = resource.supplementary_data?.related_ids?.order_id || resource.id || resource.order_id || null;
+        const providerCaptureId = resource.id || (resource.purchase_units && resource.purchase_units[0] && resource.purchase_units[0].payments && resource.purchase_units[0].payments.captures && resource.purchase_units[0].payments.captures[0] && resource.purchase_units[0].payments.captures[0].id) || null;
+        const amountValue = (resource.amount && resource.amount.value) || (resource.purchase_units && resource.purchase_units[0] && resource.purchase_units[0].payments && resource.purchase_units[0].payments.captures && resource.purchase_units[0].payments.captures[0] && resource.purchase_units[0].payments.captures[0].amount && resource.purchase_units[0].payments.captures[0].amount.value) || null;
+        const amountCents = amountValue ? Math.round(parseFloat(amountValue) * 100) : 0;
+
+        // If we can find a user by matching providerOrderId in payments, update their subscription
+        if (orderId) {
+          // Try to find payment record by providerOrderId
+          // Note: Storage does not have a direct index search here; list recent payments and match
+          // For simplicity, attempt to upsert using providerOrderId match via DB query if supported.
+          // Fallback: no-op but keep audit.
+          // TODO: implement DB lookup by providerOrderId for robust linkage
+        }
+      }
+
+      res.status(200).json({ success: true });
+    } catch (err) {
+      res.status(500).json({ error: 'webhook handling failed' });
     }
   });
 

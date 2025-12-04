@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -18,12 +18,36 @@ import {
   Download,
   Clock,
   FileText,
+  Link as LinkIcon,
 } from "lucide-react";
 
 export default function Account() {
   const { user, isLoaded } = useUser();
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
+  const [subscription, setSubscription] = useState<any>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+
+  // Fetch subscription data when account page loads
+  useEffect(() => {
+    async function loadSubscription() {
+      try {
+        setLoadingSubscription(true);
+        const resp = await fetch('/api/account/subscription');
+        if (resp.ok) {
+          const data = await resp.json();
+          setSubscription(data);
+        }
+      } catch (err) {
+        console.error('Failed to load subscription:', err);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    }
+    if (isLoaded) {
+      loadSubscription();
+    }
+  }, [isLoaded]);
 
   if (!isLoaded) {
     return (
@@ -168,49 +192,93 @@ export default function Account() {
       case "billing":
         return (
           <motion.div variants={itemVariants} className="space-y-6">
-            {/* Current Plan */}
-            <Card className="border-2 border-primary bg-gradient-to-br from-orange-50 to-transparent">
-              <CardContent className="p-8">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                      Current Plan
-                    </p>
-                    <h3 className="text-3xl font-bold text-gray-900 mt-2">
-                      Free Plan
-                    </h3>
-                    <p className="text-gray-600 mt-2">
-                      Unlimited access to 3 templates with basic formatting
-                    </p>
-                  </div>
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
-                    Upgrade Plan
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {loadingSubscription ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p className="text-gray-600 mt-4">Loading subscription...</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                {/* Current Plan */}
+                <Card className="border-2 border-primary bg-gradient-to-br from-orange-50 to-transparent">
+                  <CardContent className="p-8">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                          Current Plan
+                        </p>
+                        <h3 className="text-3xl font-bold text-gray-900 mt-2 capitalize">
+                          {subscription?.currentTier || "free"} Plan
+                        </h3>
+                        <p className="text-gray-600 mt-2">
+                          {subscription?.currentTier === "pro" && "Unlimited resumes, all templates, PDF/Word exports, AI features"}
+                          {subscription?.currentTier === "premium" && "Everything + Cover letters, LinkedIn optimizer, expert review, priority support"}
+                          {subscription?.currentTier === "free" && "Unlimited access to 3 templates with basic formatting"}
+                        </p>
+                        {subscription?.nextRenewalDate && (
+                          <p className="text-sm text-gray-500 mt-3 flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            Next renewal: {new Date(subscription.nextRenewalDate).toLocaleDateString()}
+                          </p>
+                        )}
+                      </div>
+                      {subscription?.currentTier === "free" && (
+                        <a href="/pricing">
+                          <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white">
+                            Upgrade Plan
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
 
-            {/* Billing History */}
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-primary" />
-                  Billing History
-                </h3>
-              </CardHeader>
-              <Separator />
-              <CardContent className="p-6">
-                <div className="text-center py-12">
-                  <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">
-                    No billing history available
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Your invoices will appear here once you upgrade to a paid plan
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+                {/* Billing History */}
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-primary" />
+                      Billing History
+                    </h3>
+                  </CardHeader>
+                  <Separator />
+                  <CardContent className="p-6">
+                    {subscription?.paymentHistory && subscription.paymentHistory.length > 0 ? (
+                      <div className="space-y-4">
+                        {subscription.paymentHistory.map((payment: any, idx: number) => (
+                          <div key={idx} className="flex justify-between items-center pb-4 border-b border-gray-100 last:border-0">
+                            <div>
+                              <p className="font-medium text-gray-900 capitalize">{payment.tier} Plan</p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(payment.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-gray-900">
+                                ${(payment.amount / 100).toFixed(2)} {payment.currency}
+                              </p>
+                              <p className="text-xs text-gray-500 capitalize">{payment.provider}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">
+                          No billing history available
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Your invoices will appear here once you upgrade to a paid plan
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </motion.div>
         );
 

@@ -10,7 +10,7 @@ export const resumeTemplates = [
     style: "professional",
     description: "Full-color sidebar with contact info and summary",
     tier: "basic",
-    thumbnail: "/clean-resume-template-orange-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/clean-resume-template-orange-hub.jpg"
   },
   {
     id: "minimalist",
@@ -18,7 +18,7 @@ export const resumeTemplates = [
     style: "simple",
     description: "Basic layout with unique skill bars",
     tier: "basic",
-    thumbnail: "/minimalist-resume-template-blue-hub.webp"
+    thumbnail: "/Resume Templates and Thumbnails/minimalist-resume-template-blue-hub.webp"
   },
   {
     id: "chicago",
@@ -26,7 +26,7 @@ export const resumeTemplates = [
     style: "professional",
     description: "Basic design for formal industries",
     tier: "basic",
-    thumbnail: "/chicago-resume-template-blue-hub.webp"
+    thumbnail: "/Resume Templates and Thumbnails/chicago-resume-template-blue-hub.webp"
   },
   {
     id: "modern",
@@ -34,7 +34,7 @@ export const resumeTemplates = [
     style: "modern",
     description: "Simple header with round headshot spot",
     tier: "pro",
-    thumbnail: "/modern-resume-template-red-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/modern-resume-template-red-hub.jpg"
   },
   {
     id: "corporate",
@@ -42,7 +42,7 @@ export const resumeTemplates = [
     style: "professional",
     description: "Bold full-color header with minimalist sidebar",
     tier: "pro",
-    thumbnail: "/corporate-resume-template-red-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/corporate-resume-template-red-hub.jpg"
   },
   {
     id: "elegant",
@@ -50,7 +50,7 @@ export const resumeTemplates = [
     style: "creative",
     description: "Center-aligned with simple headshot at top",
     tier: "pro",
-    thumbnail: "/elegant-resume-template-green-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/elegant-resume-template-green-hub.jpg"
   },
   {
     id: "2025",
@@ -58,7 +58,7 @@ export const resumeTemplates = [
     style: "modern",
     description: "Modern dark blue design for contemporary professionals",
     tier: "pro",
-    thumbnail: "/2025-resume-builder-template-dark-blue.avif"
+    thumbnail: "/Resume Templates and Thumbnails/2025-resume-builder-template-dark-blue.jpg"
   },
   {
     id: "taj-mahal",
@@ -66,7 +66,7 @@ export const resumeTemplates = [
     style: "professional",
     description: "Large sidebar for contact, summary, and education",
     tier: "pro",
-    thumbnail: "/taj-mahal-resume-template-blue-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/taj-mahal-resume-template-blue-hub.jpg"
   },
   {
     id: "advanced",
@@ -75,7 +75,7 @@ export const resumeTemplates = [
     description: "Modern bubbles for contact info and skills with headshot",
     tier: "premium",
     isPremium: true,
-    thumbnail: "/advanced-resume-template-navy-orange-hub.avif"
+    thumbnail: "/Resume Templates and Thumbnails/advanced-resume-template-navy-orange-hub.jpg"
   },
   {
     id: "majestic",
@@ -84,7 +84,7 @@ export const resumeTemplates = [
     description: "Elegant design with sophisticated layout",
     tier: "premium",
     isPremium: true,
-    thumbnail: "/majestic-resume-template-green.avif"
+    thumbnail: "/Resume Templates and Thumbnails/majestic-resume-template-green.jpg"
   },
 ] as const;
 

@@ -97,65 +97,54 @@ function HeroSection() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="relative hidden lg:block"
+            className="relative"
           >
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-3xl blur-2xl"></div>
-              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="ml-auto text-xs text-gray-400">Resume Builder</span>
+              <img
+                src="/home-hero-banner.jpg"
+                alt="Professional resume builder preview"
+                className="relative rounded-2xl shadow-2xl w-full h-auto object-cover"
+              />
+
+              {/* Float 1: Resume Icon */}
+              <motion.div
+                className="absolute -left-6 top-10 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 hidden sm:block"
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <div className="bg-blue-100 p-2 rounded-xl">
+                  <FileText className="w-6 h-6 text-blue-600" />
                 </div>
+              </motion.div>
 
-                <div className="space-y-4">
-                  <div className="flex gap-4">
-                    <div className="w-16 space-y-2">
-                      {["Profile", "Experience", "Education", "Skills"].map((section, i) => (
-                        <div
-                          key={section}
-                          className={`flex items-center gap-2 p-2 rounded-lg text-xs ${i === 0 ? "bg-primary/10 text-primary" : "text-gray-400"
-                            }`}
-                        >
-                          <div className={`w-5 h-5 rounded ${i === 0 ? "bg-primary/20" : "bg-gray-100"}`}></div>
-                          <span className="hidden xl:inline">{section}</span>
-                        </div>
-                      ))}
-                    </div>
+              {/* Float 2: Success Emoji */}
+              <motion.div
+                className="absolute -right-4 top-20 bg-white p-2 rounded-full shadow-lg border border-gray-100 hidden sm:block"
+                animate={{ y: [0, 15, 0], rotate: [0, 10, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              >
+                <span className="text-3xl">🎉</span>
+              </motion.div>
 
-                    <div className="flex-1 bg-gray-50 rounded-xl p-4 min-h-[280px]">
-                      <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/60 flex items-center justify-center text-white text-xl font-bold">
-                          JD
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900">Your Name</h3>
-                          <p className="text-sm text-gray-500">Professional Title</p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            <Badge variant="secondary" className="text-xs">Email</Badge>
-                            <Badge variant="secondary" className="text-xs">Phone</Badge>
-                            <Badge variant="secondary" className="text-xs">Location</Badge>
-                          </div>
-                        </div>
-                      </div>
+              {/* Float 3: Reading/Skills */}
+              <motion.div
+                className="absolute left-10 -bottom-6 bg-white px-4 py-2 rounded-xl shadow-xl border border-gray-100 flex items-center gap-2 hidden sm:flex"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className="text-sm font-semibold text-gray-700">Hired!</span>
+              </motion.div>
 
-                      <div className="mt-6 space-y-3">
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Profile</h4>
-                          <div className="h-2 bg-gray-200 rounded w-full"></div>
-                          <div className="h-2 bg-gray-200 rounded w-4/5 mt-1"></div>
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Experience</h4>
-                          <div className="h-2 bg-gray-200 rounded w-full"></div>
-                          <div className="h-2 bg-gray-200 rounded w-3/4 mt-1"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Float 4: Profession/Worker Emoji */}
+              <motion.div
+                className="absolute right-8 -bottom-4 bg-white p-3 rounded-2xl shadow-xl border border-gray-100 hidden sm:block"
+                animate={{ y: [0, -12, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+              >
+                <span className="text-2xl">👨‍💻</span>
+              </motion.div>
             </div>
           </motion.div>
         </div>

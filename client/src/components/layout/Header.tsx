@@ -11,8 +11,17 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, User, FileText, Settings, LogOut } from "lucide-react";
 import { navItems } from "@/lib/navigation";
 
 export function Header() {
@@ -42,7 +51,7 @@ export function Header() {
     },
   });
 
-  
+
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
@@ -88,15 +97,14 @@ export function Header() {
                       </>
                     ) : (
                       // Check if user is logged in for "My Resumes"
-                      (item.href === '/my-resumes' && !user) || (item.href === '/my-cover-letters' && !user) ? null : ( 
+                      (item.href === '/my-resumes' && !user) || (item.href === '/my-cover-letters' && !user) ? null : (
                         <NavigationMenuLink asChild>
                           <Link href={item.href!}>
                             <span
-                              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
-                                location === item.href
-                                  ? "text-primary"
-                                  : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
-                              }`}
+                              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${location === item.href
+                                ? "text-primary"
+                                : "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                                }`}
                             >
                               {item.label}
                             </span>
@@ -113,34 +121,61 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             {user ? (
               <>
-                <Link href="/my-resumes">
-                  <Button variant="ghost" className="font-medium">
-                    My Resumes
-                  </Button>
-                </Link>
-                <Link href="/my-cover-letters"> {/* Link to My Cover Letters */}
-                  <Button variant="ghost" className="font-medium">
-                    My Cover Letters
-                  </Button>
-                </Link>
-                <Link href="/account">
-                  <Button variant="outline" className="font-medium">
-                    My Account
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  onClick={() => logoutMutation.mutate()}
-                  disabled={logoutMutation.isPending}
-                  className="font-medium"
-                >
-                  Logout
-                </Button>
                 <Link href="/builder">
                   <Button className="font-medium bg-primary hover:bg-primary/90" data-testid="button-build-resume">
                     Build My Resume
                   </Button>
                 </Link>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10 border border-gray-200">
+                        <AvatarImage src={user.avatarUrl} alt={user.username} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                          {user.username?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.username}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-resumes" className="cursor-pointer w-full flex items-center">
+                        <FileText className="mr-2 h-4 w-4" />
+                        <span>My Resumes</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-cover-letters" className="cursor-pointer w-full flex items-center">
+                        <FileText className="mr-2 h-4 w-4" />
+                        <span>My Cover Letters</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/account" className="cursor-pointer w-full flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>My Account</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer text-red-600 focus:text-red-600"
+                      onClick={() => logoutMutation.mutate()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
@@ -195,11 +230,10 @@ export function Header() {
                         (item.href === '/my-resumes' && !user) || (item.href === '/my-cover-letters' && !user) ? null : ( // Hide My Resumes/My Cover Letters if not logged in
                           <Link href={item.href!} onClick={() => setMobileOpen(false)}>
                             <div
-                              className={`px-2 py-2 font-medium rounded-md cursor-pointer ${
-                                location === item.href
-                                  ? "text-primary"
-                                  : "text-gray-700 hover:text-gray-900"
-                              }`}
+                              className={`px-2 py-2 font-medium rounded-md cursor-pointer ${location === item.href
+                                ? "text-primary"
+                                : "text-gray-700 hover:text-gray-900"
+                                }`}
                             >
                               {item.label}
                             </div>

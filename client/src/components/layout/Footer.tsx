@@ -47,7 +47,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-4 text-sm text-gray-400 max-w-xs">
-              Create professional resumes in minutes with our AI-powered builder. 
+              Create professional resumes in minutes with our AI-powered builder.
               Trusted by millions of job seekers worldwide.
             </p>
             <div className="flex gap-4 mt-6">

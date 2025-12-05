@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
+import { Sparkles, Loader2, ArrowLeft, ArrowRight, Lightbulb, Lock } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAIAccess } from "@/hooks/useAIAccess";
 
 interface SummaryStepProps {
   onNext: () => void;
@@ -24,6 +25,7 @@ export function SummaryStep({ onNext, onBack }: SummaryStepProps) {
   const { resumeData, updateSummary } = useResume();
   const [summary, setSummary] = useState(resumeData.summary || "");
   const { toast } = useToast();
+  const { canUseAI, accountTier } = useAIAccess();
 
   const generateMutation = useMutation({
     mutationFn: async () => {
@@ -44,7 +46,17 @@ export function SummaryStep({ onNext, onBack }: SummaryStepProps) {
         });
       }
     },
-    onError: () => {
+    onError: (error: any) => {
+      // Handle 403 Forbidden (feature not available for plan)
+      if (error?.status === 403) {
+        toast({
+          title: "Feature not available",
+          description: "AI features are available on Pro plan and higher. Upgrade to use this feature.",
+          variant: "destructive",
+        });
+        return;
+      }
+      // Generic error message for other errors
       toast({
         title: "Generation failed",
         description: "Could not generate summary. Please try again or write your own.",
@@ -80,27 +92,35 @@ export function SummaryStep({ onNext, onBack }: SummaryStepProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium text-gray-700">Your Summary</label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => generateMutation.mutate()}
-            disabled={generateMutation.isPending}
-            className="gap-2"
-            data-testid="button-generate-summary"
-          >
-            {generateMutation.isPending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                Generate with AI
-              </>
-            )}
-          </Button>
+          {!canUseAI && (
+            <Badge variant="secondary" className="gap-1 bg-yellow-100 text-yellow-800 border-yellow-200">
+              <Lock className="w-3 h-3" />
+              Pro Feature
+            </Badge>
+          )}
+          {canUseAI && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => generateMutation.mutate()}
+              disabled={generateMutation.isPending}
+              className="gap-2"
+              data-testid="button-generate-summary"
+            >
+              {generateMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  Generate with AI
+                </>
+              )}
+            </Button>
+          )}
         </div>
 
         <Textarea
@@ -116,6 +136,21 @@ export function SummaryStep({ onNext, onBack }: SummaryStepProps) {
           <span>Recommended: 200-400 characters</span>
         </div>
       </div>
+
+      {!canUseAI && (
+        <Card className="p-4 bg-orange-50 border-orange-200">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-orange-900 mb-1">Upgrade to use AI features</h4>
+              <p className="text-sm text-orange-800 mb-3">Generate professional summaries instantly with AI. Available on Pro plan ($2/month).</p>
+              <a href="/pricing" className="text-sm font-medium text-orange-700 hover:text-orange-900 underline">
+                View Pricing Plans →
+              </a>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-4 bg-blue-50 border-blue-100">
         <div className="flex items-start gap-3">

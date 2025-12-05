@@ -3,13 +3,13 @@ import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
-import ConvexStorage from "./convexStorage";
+// ConvexStorage is dynamically imported only when CONVEX_URL is set
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getResume(id: string): Promise<Resume | undefined>;
   getResumesByUserId(userId: string): Promise<Resume[]>;
   createResume(resume: InsertResume): Promise<Resume>;
@@ -175,14 +175,13 @@ class DbStorage implements IStorage {
 }
 
 function makeStorage(): IStorage {
-  const convexUrl = process.env.CONVEX_URL;
-  if (convexUrl) {
-    try {
-      return new ConvexStorage(convexUrl) as unknown as IStorage;
-    } catch (e) {
-      console.error("Failed to initialize ConvexStorage:", e);
-    }
-  }
+  // Note: ConvexStorage is disabled - install the 'convex' package and uncomment to enable
+  // const convexUrl = process.env.CONVEX_URL;
+  // if (convexUrl) {
+  //   const ConvexStorage = require("./convexStorage").default;
+  //   return new ConvexStorage(convexUrl) as unknown as IStorage;
+  // }
+
   const url = process.env.DATABASE_URL;
   if (url) {
     return new DbStorage(url);

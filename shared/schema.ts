@@ -2,21 +2,94 @@ import { pgTable, text, varchar, integer, boolean, jsonb, timestamp } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Resume Templates
+// Resume Templates with Tier Information
 export const resumeTemplates = [
-  { id: "clean", name: "Clean", style: "professional", description: "Full-color sidebar with contact info and summary" },
-  { id: "taj-mahal", name: "Taj Mahal", style: "professional", description: "Large sidebar for contact, summary, and education" },
-  { id: "2025", name: "2025", style: "modern", description: "Modern dark blue design for contemporary professionals" },
-  { id: "corporate", name: "Corporate", style: "professional", description: "Bold full-color header with minimalist sidebar" },
-  { id: "advanced", name: "Advanced", style: "creative", description: "Modern bubbles for contact info and skills with headshot" },
-  { id: "majestic", name: "Majestic", style: "professional", description: "Elegant design with sophisticated layout" },
-  { id: "modern", name: "Modern", style: "modern", description: "Simple header with round headshot spot" },
-  { id: "minimalist", name: "Minimalist", style: "simple", description: "Basic layout with unique skill bars" },
-  { id: "elegant", name: "Elegant", style: "creative", description: "Center-aligned with simple headshot at top" },
-  { id: "chicago", name: "Chicago", style: "professional", description: "Basic design for formal industries" },
+  {
+    id: "clean",
+    name: "Clean",
+    style: "professional",
+    description: "Full-color sidebar with contact info and summary",
+    tier: "basic",
+    thumbnail: "/clean-resume-template-orange-hub.avif"
+  },
+  {
+    id: "minimalist",
+    name: "Minimalist",
+    style: "simple",
+    description: "Basic layout with unique skill bars",
+    tier: "basic",
+    thumbnail: "/minimalist-resume-template-blue-hub.webp"
+  },
+  {
+    id: "chicago",
+    name: "Chicago",
+    style: "professional",
+    description: "Basic design for formal industries",
+    tier: "basic",
+    thumbnail: "/chicago-resume-template-blue-hub.webp"
+  },
+  {
+    id: "modern",
+    name: "Modern",
+    style: "modern",
+    description: "Simple header with round headshot spot",
+    tier: "pro",
+    thumbnail: "/modern-resume-template-red-hub.avif"
+  },
+  {
+    id: "corporate",
+    name: "Corporate",
+    style: "professional",
+    description: "Bold full-color header with minimalist sidebar",
+    tier: "pro",
+    thumbnail: "/corporate-resume-template-red-hub.avif"
+  },
+  {
+    id: "elegant",
+    name: "Elegant",
+    style: "creative",
+    description: "Center-aligned with simple headshot at top",
+    tier: "pro",
+    thumbnail: "/elegant-resume-template-green-hub.avif"
+  },
+  {
+    id: "2025",
+    name: "2025",
+    style: "modern",
+    description: "Modern dark blue design for contemporary professionals",
+    tier: "pro",
+    thumbnail: "/2025-resume-builder-template-dark-blue.avif"
+  },
+  {
+    id: "taj-mahal",
+    name: "Taj Mahal",
+    style: "professional",
+    description: "Large sidebar for contact, summary, and education",
+    tier: "pro",
+    thumbnail: "/taj-mahal-resume-template-blue-hub.avif"
+  },
+  {
+    id: "advanced",
+    name: "Advanced",
+    style: "creative",
+    description: "Modern bubbles for contact info and skills with headshot",
+    tier: "premium",
+    isPremium: true,
+    thumbnail: "/advanced-resume-template-navy-orange-hub.avif"
+  },
+  {
+    id: "majestic",
+    name: "Majestic",
+    style: "professional",
+    description: "Elegant design with sophisticated layout",
+    tier: "premium",
+    isPremium: true,
+    thumbnail: "/majestic-resume-template-green.avif"
+  },
 ] as const;
 
 export type TemplateId = typeof resumeTemplates[number]["id"];
+export type TemplateTier = "basic" | "pro" | "premium";
 
 // CV Templates
 export const cvTemplates = [
@@ -169,8 +242,9 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"),
   accountTier: text("account_tier").notNull().default("free"),
+  avatarUrl: text("avatar_url"),
   passwordResetToken: varchar("password_reset_token"),
   passwordResetExpires: timestamp("password_reset_expires"),
 });
@@ -571,3 +645,43 @@ export const featureComparisonMatrix = [
   { name: "Expert Resume Review", category: "Support" },
   { name: "Portfolio Website", category: "Advanced" },
 ] as const;
+
+// Template Access Control Helper Functions
+export function getAvailableTemplates(accountTier: string) {
+  if (accountTier === "premium") {
+    return resumeTemplates; // All templates
+  }
+
+  if (accountTier === "pro") {
+    return resumeTemplates.filter(t => t.tier === "basic" || t.tier === "pro");
+  }
+
+  // Free tier - only basic templates
+  return resumeTemplates.filter(t => t.tier === "basic");
+}
+
+export function canAccessTemplate(templateId: string, accountTier: string): boolean {
+  const template = resumeTemplates.find(t => t.id === templateId);
+  if (!template) return false;
+
+  if (accountTier === "premium") return true;
+  if (accountTier === "pro") return template.tier === "basic" || template.tier === "pro";
+
+  // Free tier
+  return template.tier === "basic";
+}
+
+export function getRequiredTier(templateId: string): TemplateTier | null {
+  const template = resumeTemplates.find(t => t.id === templateId);
+  return template?.tier || null;
+}
+
+export function getTierDisplayName(tier: TemplateTier): string {
+  const tierNames = {
+    basic: "Free",
+    pro: "Pro",
+    premium: "Premium"
+  };
+  return tierNames[tier];
+}
+

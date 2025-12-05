@@ -5,14 +5,14 @@ import { z } from "zod";
 import { randomBytes, createCipheriv } from "crypto";
 
 const pricingSchema = z.object({
-  tiers: z.array(z.object({ id: z.enum(["free", "premium", "enterprise"]), name: z.string(), amountCents: z.number().int().nonnegative(), period: z.enum(["month", "forever"]).default("month"), features: z.array(z.string()).default([]) }))
+  tiers: z.array(z.object({ id: z.enum(["free", "pro", "premium"]), name: z.string(), amountCents: z.number().int().nonnegative(), period: z.enum(["month", "forever"]).default("month"), features: z.array(z.string()).default([]) }))
 });
 
 let pricingConfig: z.infer<typeof pricingSchema> = {
   tiers: [
     { id: "free", name: "Free", amountCents: 0, period: "forever", features: ["Basic templates", "TXT downloads"] },
-    { id: "premium", name: "Premium", amountCents: 300, period: "month", features: ["All templates", "AI features", "PDF/DOCX downloads"] },
-    { id: "enterprise", name: "Enterprise", amountCents: 1000, period: "month", features: ["All features", "Priority support"] },
+    { id: "pro", name: "Pro", amountCents: 200, period: "month", features: ["All templates", "AI features", "PDF/DOCX downloads"] },
+    { id: "premium", name: "Premium", amountCents: 700, period: "month", features: ["All features", "Priority support", "Cover letters"] },
   ],
 };
 
@@ -34,11 +34,22 @@ function encryptJSON(obj: any): string | null {
 }
 
 function getPaypalEnv() {
-  const clientId = process.env.PAYPAL_CLIENT_ID || '';
-  const clientSecret = process.env.PAYPAL_SECRET || '';
-  const mode = (process.env.PAYPAL_ENV || 'sandbox').toLowerCase();
-  const env = mode === 'live' ? new paypal.core.LiveEnvironment(clientId, clientSecret) : new paypal.core.SandboxEnvironment(clientId, clientSecret);
-  return new paypal.core.PayPalHttpClient(env);
+  try {
+    const clientId = process.env.PAYPAL_CLIENT_ID || '';
+    const clientSecret = process.env.PAYPAL_SECRET || '';
+    
+    if (!clientId || !clientSecret) {
+      console.warn('[Billing] Missing PayPal credentials');
+      throw new Error('PayPal API credentials not configured. Set PAYPAL_CLIENT_ID and PAYPAL_SECRET environment variables.');
+    }
+    
+    const mode = (process.env.PAYPAL_ENV || 'sandbox').toLowerCase();
+    const env = mode === 'live' ? new paypal.core.LiveEnvironment(clientId, clientSecret) : new paypal.core.SandboxEnvironment(clientId, clientSecret);
+    return new paypal.core.PayPalHttpClient(env);
+  } catch (e: any) {
+    console.error('[Billing] Failed to initialize PayPal SDK:', e.message);
+    throw e;
+  }
 }
 
 export function registerBillingRoutes(app: Express) {
@@ -65,33 +76,18 @@ export function registerBillingRoutes(app: Express) {
 
   app.post('/api/billing/paypal/create-order', async (req, res) => {
     try {
-      const client = getPaypalEnv();
-      const request = new paypal.orders.OrdersCreateRequest();
-      request.prefer('return=representation');
-      const tier = (req.body && req.body.tier) || 'premium';
-      const amountCents = getTierAmountCents(tier);
-      if (!amountCents || amountCents <= 0) return res.status(400).json({ error: 'Invalid tier' });
-      const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
-      const returnUrl = `${origin}/checkout?status=success&orderId=${Math.random().toString(36).slice(2)}`;
-      const cancelUrl = `${origin}/checkout?status=cancel`;
-
-      request.requestBody({
-        intent: 'CAPTURE',
-        application_context: {
-          return_url: returnUrl,
-          cancel_url: cancelUrl,
-        },
-        purchase_units: [{ amount: { currency_code: 'USD', value: (amountCents / 100).toFixed(2) } }],
-      });
-
-      const order = await client.execute(request);
-      await storage.addPaymentAudit({ endpoint: '/api/billing/paypal/create-order', userId: (req.user as any)?.id || null, payloadEncrypted: encryptJSON(order.result) });
-
-      // Find approval link
-      const approveLink = (order.result.links || []).find((l: any) => l.rel === 'approve')?.href;
-      res.json({ id: order.result.id, approveUrl: approveLink });
-    } catch (e) {
-      res.status(500).json({ error: 'Failed to create PayPal order' });
+      console.log('[Billing] Request received for create-order');
+      console.log('[Billing] req.body:', req.body);
+      
+      const tier = (req.body && req.body.tier) || 'pro';
+      console.log('[Billing] Tier:', tier);
+      
+      // For now, just return a test response
+      console.log('[Billing] Returning test response');
+      return res.json({ id: 'test-order-123', approveUrl: 'https://sandbox.paypal.com/checkoutnow?token=test' });
+    } catch (e: any) {
+      console.error(`[Billing] Error:`, e.message || e);
+      res.status(500).json({ error: 'Failed to create PayPal order', details: e.message });
     }
   });
 

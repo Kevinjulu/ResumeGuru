@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +31,7 @@ function HeroSection() {
   return (
     <section className="relative bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmOTczMTYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div {...fadeInUp} className="space-y-8">
@@ -46,7 +47,7 @@ function HeroSection() {
             </h1>
 
             <p className="text-lg text-gray-600 max-w-lg">
-              Let our AI-powered resume builder help you create a professional resume 
+              Let our AI-powered resume builder help you create a professional resume
               quickly and effortlessly. Choose from 10+ templates and get hired faster.
             </p>
 
@@ -107,23 +108,22 @@ function HeroSection() {
                   <div className="w-3 h-3 rounded-full bg-green-400"></div>
                   <span className="ml-auto text-xs text-gray-400">Resume Builder</span>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="flex gap-4">
                     <div className="w-16 space-y-2">
                       {["Profile", "Experience", "Education", "Skills"].map((section, i) => (
                         <div
                           key={section}
-                          className={`flex items-center gap-2 p-2 rounded-lg text-xs ${
-                            i === 0 ? "bg-primary/10 text-primary" : "text-gray-400"
-                          }`}
+                          className={`flex items-center gap-2 p-2 rounded-lg text-xs ${i === 0 ? "bg-primary/10 text-primary" : "text-gray-400"
+                            }`}
                         >
                           <div className={`w-5 h-5 rounded ${i === 0 ? "bg-primary/20" : "bg-gray-100"}`}></div>
                           <span className="hidden xl:inline">{section}</span>
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="flex-1 bg-gray-50 rounded-xl p-4 min-h-[280px]">
                       <div className="flex items-start gap-4">
                         <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/30 to-primary/60 flex items-center justify-center text-white text-xl font-bold">
@@ -139,7 +139,7 @@ function HeroSection() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 space-y-3">
                         <div>
                           <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Profile</h4>
@@ -175,7 +175,7 @@ function TemplatesSection() {
             Choose your favorite free resume template
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Make a resume by downloading a free resume template from our collection. 
+            Make a resume by downloading a free resume template from our collection.
             You can also let the Guru resume builder write and format your resume for you.
           </p>
         </motion.div>
@@ -189,30 +189,24 @@ function TemplatesSection() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <Link href={`/builder?template=${template.id}`}>
-                <Card className="group cursor-pointer overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1" data-testid={`card-template-${template.id}`}>
-                  <div className="aspect-[8.5/11] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
-                    <div className="absolute inset-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                      <div 
-                        className="h-20 rounded-t-lg" 
-                        style={{ backgroundColor: templateColors.find(c => c.id === (template.style === "modern" ? "blue" : "orange"))?.hex }}
-                      ></div>
-                      <div className="p-3 space-y-2">
-                        <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                        <div className="h-1.5 bg-gray-100 rounded w-full"></div>
-                        <div className="h-1.5 bg-gray-100 rounded w-4/5"></div>
-                        <div className="mt-4 h-1.5 bg-gray-200 rounded w-1/2"></div>
-                        <div className="h-1 bg-gray-100 rounded w-full"></div>
-                        <div className="h-1 bg-gray-100 rounded w-5/6"></div>
-                      </div>
-                    </div>
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <Button size="sm" className="shadow-lg">
+                <Card className="group cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/30" data-testid={`card-template-${template.id}`}>
+                  <div className="aspect-[8.5/11] bg-gradient-to-br from-gray-100 to-gray-50 relative overflow-hidden">
+                    <img
+                      src={template.thumbnail}
+                      alt={`${template.name} resume template`}
+                      className="w-full h-full object-cover object-top"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-8">
+                      <Button size="sm" className="shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                        <FileText className="w-4 h-4 mr-2" />
                         Use This Template
                       </Button>
                     </div>
                   </div>
                   <CardContent className="p-4 text-center">
-                    <h3 className="font-semibold text-gray-900">{template.name}</h3>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{template.name}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{template.description}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -234,23 +228,138 @@ function TemplatesSection() {
 }
 
 function AISection() {
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [typedJob, setTypedJob] = React.useState("");
+  const [typedYears, setTypedYears] = React.useState("");
+  const [visibleSkills, setVisibleSkills] = React.useState(0);
+
+  const jobTitle = "Software Engineer";
+  const yearsExp = "5+ years";
+  const skills = ["React", "TypeScript", "Node.js", "AWS"];
+
+  // Typing animation effect
+  React.useEffect(() => {
+    let jobIndex = 0;
+    let yearsIndex = 0;
+
+    const jobInterval = setInterval(() => {
+      if (jobIndex <= jobTitle.length) {
+        setTypedJob(jobTitle.slice(0, jobIndex));
+        jobIndex++;
+      }
+    }, 100);
+
+    const yearsTimeout = setTimeout(() => {
+      const yearsInterval = setInterval(() => {
+        if (yearsIndex <= yearsExp.length) {
+          setTypedYears(yearsExp.slice(0, yearsIndex));
+          yearsIndex++;
+        }
+      }, 100);
+      return () => clearInterval(yearsInterval);
+    }, 1500);
+
+    return () => {
+      clearInterval(jobInterval);
+      clearTimeout(yearsTimeout);
+    };
+  }, []);
+
+  // Skill badges animation
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (visibleSkills < skills.length) {
+        setVisibleSkills(visibleSkills + 1);
+      }
+    }, 3000 + visibleSkills * 300);
+    return () => clearTimeout(timeout);
+  }, [visibleSkills]);
+
+  const handleGenerate = () => {
+    setIsGenerating(true);
+    setTimeout(() => setIsGenerating(false), 3000);
+  };
+
   return (
-    <section className="py-20 bg-gradient-to-br from-gray-50 to-orange-50/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-gradient-to-br from-gray-50 to-orange-50/30 relative overflow-hidden">
+      {/* Floating Background Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-primary/20 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.2, 0.5, 0.2],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div {...fadeInUp}>
-            <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20">
-              <Sparkles className="w-3 h-3 mr-1" />
-              AI-Powered
-            </Badge>
+            {/* Animated Badge */}
+            <motion.div
+              animate={{
+                scale: [1, 1.05, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse",
+              }}
+            >
+              <Badge className="mb-4 bg-primary/10 text-primary hover:bg-primary/20 relative">
+                <motion.div
+                  animate={{
+                    rotate: [0, 15, -15, 0],
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 1,
+                  }}
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                </motion.div>
+                AI-Powered
+                {/* Glow effect */}
+                <motion.div
+                  className="absolute inset-0 bg-primary/20 rounded-full blur-md -z-10"
+                  animate={{
+                    opacity: [0.3, 0.6, 0.3],
+                    scale: [1, 1.2, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                  }}
+                />
+              </Badge>
+            </motion.div>
+
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
               Make your resume faster with AI
             </h2>
             <p className="text-lg text-gray-600 mb-8">
-              Enter a few details about your experience and qualifications, and we will 
-              generate a pre-written resume that you can quickly edit in our resume builder. 
+              Enter a few details about your experience and qualifications, and we will
+              generate a pre-written resume that you can quickly edit in our resume builder.
               No need to start on a blank page.
             </p>
+
+            {/* Staggered Feature List */}
             <div className="space-y-4">
               {[
                 "Generate professional summaries instantly",
@@ -258,62 +367,209 @@ function AISection() {
                 "Optimize keywords for ATS systems",
                 "Improve your resume's impact with AI suggestions",
               ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
-                </div>
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1, duration: 0.5 }}
+                  whileHover={{ x: 5, transition: { duration: 0.2 } }}
+                  className="flex items-center gap-3 cursor-default group"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 + 0.2, type: "spring", stiffness: 200 }}
+                  >
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 group-hover:scale-110 transition-transform" />
+                  </motion.div>
+                  <span className="text-gray-700 group-hover:text-gray-900 transition-colors">{feature}</span>
+                </motion.div>
               ))}
             </div>
+
             <Link href="/builder">
-              <Button size="lg" className="mt-8 gap-2" data-testid="button-ai-cta">
-                <Sparkles className="w-5 h-5" />
-                Try AI Resume Builder
-              </Button>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button size="lg" className="mt-8 gap-2 relative overflow-hidden group" data-testid="button-ai-cta">
+                  {/* Pulse effect */}
+                  <motion.div
+                    className="absolute inset-0 bg-white/20 rounded-lg"
+                    animate={{
+                      scale: [1, 1.5],
+                      opacity: [0.5, 0],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatDelay: 0.5,
+                    }}
+                  />
+                  <motion.div
+                    animate={{
+                      rotate: [0, 15, -15, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatDelay: 1,
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </motion.div>
+                  Try AI Resume Builder
+                </Button>
+              </motion.div>
             </Link>
           </motion.div>
 
+          {/* AI Generator Card with Animations */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             className="relative"
           >
-            <Card className="p-6 bg-white shadow-xl">
+            {/* Glow effect on hover */}
+            <motion.div
+              className="absolute -inset-2 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-2xl blur-xl opacity-0"
+              whileHover={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            <Card className="p-6 bg-white shadow-xl relative z-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
+                <motion.div
+                  className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative"
+                  animate={{
+                    boxShadow: [
+                      "0 0 0 0 rgba(249, 115, 22, 0.2)",
+                      "0 0 0 10px rgba(249, 115, 22, 0)",
+                    ],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                  }}
+                >
+                  <motion.div
+                    animate={{
+                      rotate: [0, 360],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  >
+                    <Sparkles className="w-5 h-5 text-primary" />
+                  </motion.div>
+                </motion.div>
                 <div>
                   <h4 className="font-semibold text-gray-900">AI Resume Generator</h4>
                   <p className="text-sm text-gray-500">Tell us about your experience</p>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
-                <div>
+                {/* Job Title with Typing Animation */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
                   <label className="text-sm font-medium text-gray-700 block mb-2">Job Title</label>
-                  <div className="h-10 bg-gray-100 rounded-lg border border-gray-200 px-3 flex items-center text-gray-500 text-sm">
-                    Software Engineer
+                  <div className="h-10 bg-gray-100 rounded-lg border border-gray-200 px-3 flex items-center text-gray-700 text-sm relative overflow-hidden">
+                    {typedJob}
+                    <motion.span
+                      className="inline-block w-0.5 h-4 bg-primary ml-0.5"
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                    />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+
+                {/* Years with Typing Animation */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.5 }}
+                >
                   <label className="text-sm font-medium text-gray-700 block mb-2">Years of Experience</label>
-                  <div className="h-10 bg-gray-100 rounded-lg border border-gray-200 px-3 flex items-center text-gray-500 text-sm">
-                    5+ years
+                  <div className="h-10 bg-gray-100 rounded-lg border border-gray-200 px-3 flex items-center text-gray-700 text-sm relative overflow-hidden">
+                    {typedYears}
+                    <motion.span
+                      className="inline-block w-0.5 h-4 bg-primary ml-0.5"
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                    />
                   </div>
-                </div>
-                <div>
+                </motion.div>
+
+                {/* Skills with Sequential Animation */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 2.8 }}
+                >
                   <label className="text-sm font-medium text-gray-700 block mb-2">Key Skills</label>
-                  <div className="flex flex-wrap gap-2">
-                    {["React", "TypeScript", "Node.js", "AWS"].map((skill) => (
-                      <Badge key={skill} variant="secondary">{skill}</Badge>
+                  <div className="flex flex-wrap gap-2 min-h-[32px]">
+                    {skills.slice(0, visibleSkills).map((skill, i) => (
+                      <motion.div
+                        key={skill}
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                      >
+                        <Badge variant="secondary" className="cursor-default hover:bg-primary/10 transition-colors">
+                          {skill}
+                        </Badge>
+                      </motion.div>
                     ))}
                   </div>
-                </div>
-                <Button className="w-full gap-2 mt-4">
-                  <Sparkles className="w-4 h-4" />
-                  Generate My Resume
-                </Button>
+                </motion.div>
+
+                {/* Animated Generate Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 4 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Button
+                    className="w-full gap-2 mt-4 relative overflow-hidden"
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Sparkles className="w-4 h-4" />
+                        </motion.div>
+                        Generating...
+                        {/* Progress bar */}
+                        <motion.div
+                          className="absolute bottom-0 left-0 h-1 bg-white/30"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 3 }}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate My Resume
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
               </div>
             </Card>
           </motion.div>
@@ -356,7 +612,7 @@ function HowItWorksSection() {
             Use our resume builder in 3 easy steps
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Putting together a resume has never been easier. Our resume builder fills out 
+            Putting together a resume has never been easier. Our resume builder fills out
             your information and formats it into an HR-approved template.
           </p>
         </motion.div>
@@ -412,7 +668,7 @@ function ExamplesSection() {
             Real resume examples reviewed by experts
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Explore 450+ resume examples for common jobs. Every sample is reviewed by a 
+            Explore 450+ resume examples for common jobs. Every sample is reviewed by a
             relevant expert and includes suggestions to make a resume for that job.
           </p>
         </motion.div>
@@ -490,7 +746,7 @@ function CTASection() {
             Ready to make your resume?
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Learn how our builder software can help you create a resume that perfectly 
+            Learn how our builder software can help you create a resume that perfectly
             highlights your talents and lands you more interviews.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">

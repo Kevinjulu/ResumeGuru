@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Link } from "wouter";
+import { FullPageLoader } from "@/components/common/Loader";
 import {
   User,
   FileText,
@@ -15,7 +16,6 @@ import {
   Check,
   Save,
   Mail, // For recipient info
-  Loader2, // Import Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CoverLetterProvider, useCoverLetter } from "@/lib/coverLetterContext"; // New context
@@ -168,9 +168,8 @@ function CoverLetterBuilderContent() {
 
   if (isCoverLetterLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-        Loading Cover Letter...
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <FullPageLoader text="Loading Cover Letter..." />
       </div>
     );
   }

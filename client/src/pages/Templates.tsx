@@ -4,10 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { resumeTemplates, templateColors } from "@shared/schema";
+import { resumeTemplates, templateColors, type TemplateTier } from "@shared/schema";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Search, Download, Star, CheckCircle2 } from "lucide-react";
+import { TierBadge } from "@/components/ui/TierBadge";
+import { UpgradeModal } from "@/components/modals/UpgradeModal";
+import { useTemplateAccess } from "@/hooks/useTemplateAccess";
+import { Search, Download, Star, CheckCircle2, Lock } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 
@@ -15,37 +18,46 @@ type TemplateStyle = "all" | "professional" | "modern" | "creative" | "simple";
 
 export default function Templates() {
   const [selectedStyle, setSelectedStyle] = useState<TemplateStyle>("all");
+  const [selectedTier, setSelectedTier] = useState<"all" | TemplateTier>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredTemplates = resumeTemplates.filter((template) => {
     const matchesStyle = selectedStyle === "all" || template.style === selectedStyle;
+    const matchesTier = selectedTier === "all" || template.tier === selectedTier;
     const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStyle && matchesSearch;
+      template.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStyle && matchesTier && matchesSearch;
   });
 
   const styles: { value: TemplateStyle; label: string }[] = [
-    { value: "all", label: "All Templates" },
+    { value: "all", label: "All Styles" },
     { value: "professional", label: "Professional" },
     { value: "modern", label: "Modern" },
     { value: "creative", label: "Creative" },
     { value: "simple", label: "Simple" },
   ];
 
+  const tiers: { value: "all" | TemplateTier; label: string; count: number }[] = [
+    { value: "all", label: "All Tiers", count: resumeTemplates.length },
+    { value: "basic", label: "Free", count: resumeTemplates.filter(t => t.tier === "basic").length },
+    { value: "pro", label: "Pro", count: resumeTemplates.filter(t => t.tier === "pro").length },
+    { value: "premium", label: "Premium", count: resumeTemplates.filter(t => t.tier === "premium").length },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       <main>
         <section className="bg-gradient-to-br from-orange-50 via-white to-blue-50 py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                Free Resume Templates
+                Professional Resume Templates
               </h1>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Choose from our collection of professionally designed resume templates. 
-                All templates are free to use and fully customizable.
+                Choose from our collection of professionally designed resume templates.
+                Select your tier to see available options.
               </p>
             </div>
 
@@ -63,6 +75,26 @@ export default function Templates() {
               </div>
             </div>
 
+            {/* Tier Filter */}
+            <div className="mb-6">
+              <Tabs value={selectedTier} onValueChange={(v) => setSelectedTier(v as "all" | TemplateTier)} className="w-full">
+                <TabsList className="w-full max-w-xl mx-auto flex h-auto gap-1 bg-white/50 p-1">
+                  {tiers.map((tier) => (
+                    <TabsTrigger
+                      key={tier.value}
+                      value={tier.value}
+                      className="flex-1 min-w-[80px] flex flex-col items-center gap-0.5"
+                      data-testid={`tab-tier-${tier.value}`}
+                    >
+                      <span>{tier.label}</span>
+                      <span className="text-xs text-gray-500">({tier.count})</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {/* Style Filter */}
             <Tabs value={selectedStyle} onValueChange={(v) => setSelectedStyle(v as TemplateStyle)} className="w-full">
               <TabsList className="w-full max-w-2xl mx-auto flex flex-wrap h-auto gap-1 bg-white/50 p-1">
                 {styles.map((style) => (
@@ -105,6 +137,7 @@ export default function Templates() {
                   className="mt-4"
                   onClick={() => {
                     setSelectedStyle("all");
+                    setSelectedTier("all");
                     setSearchQuery("");
                   }}
                 >
@@ -152,7 +185,7 @@ export default function Templates() {
           </div>
         </section>
       </main>
-      
+
       <Footer />
     </div>
   );
@@ -160,64 +193,101 @@ export default function Templates() {
 
 function TemplateCard({ template }: { template: typeof resumeTemplates[number] }) {
   const [selectedColor, setSelectedColor] = useState<typeof templateColors[number]>(templateColors[0]);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const { canAccessTemplate } = useTemplateAccess();
+
+  const isLocked = !canAccessTemplate(template.id);
+
+  const handleTemplateClick = () => {
+    if (isLocked) {
+      setIsUpgradeModalOpen(true);
+    }
+  };
 
   return (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300" data-testid={`card-template-${template.id}`}>
-      <div className="aspect-[8.5/11] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
-        <div className="absolute inset-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div 
-            className="h-16 transition-colors duration-200" 
-            style={{ backgroundColor: selectedColor.hex }}
-          ></div>
-          <div className="p-3 space-y-2">
-            <div className="h-2.5 bg-gray-200 rounded w-3/4"></div>
-            <div className="h-1.5 bg-gray-100 rounded w-full"></div>
-            <div className="h-1.5 bg-gray-100 rounded w-4/5"></div>
-            <div className="mt-4 h-2 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-1 bg-gray-100 rounded w-full"></div>
-            <div className="h-1 bg-gray-100 rounded w-5/6"></div>
-            <div className="h-1 bg-gray-100 rounded w-4/5"></div>
-            <div className="mt-3 h-2 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-1 bg-gray-100 rounded w-full"></div>
-            <div className="h-1 bg-gray-100 rounded w-3/4"></div>
+    <>
+      <Card
+        className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+        data-testid={`card-template-${template.id}`}
+        onClick={isLocked ? handleTemplateClick : undefined}
+      >
+        <div className="aspect-[8.5/11] bg-gray-100 relative overflow-hidden">
+          {/* Actual Resume Thumbnail */}
+          <img
+            src={template.thumbnail}
+            alt={`${template.name} resume template`}
+            className={`w-full h-full object-cover object-top transition-transform duration-300 ${isLocked ? "group-hover:scale-105 opacity-60" : "group-hover:scale-105"
+              }`}
+            loading="lazy"
+          />
+
+          {/* Tier Badge Overlay */}
+          <div className="absolute top-2 right-2 z-10">
+            <TierBadge tier={template.tier} size="sm" />
           </div>
+
+          {/* Lock Overlay for Premium Templates */}
+          {isLocked && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <div className="text-center text-white">
+                <Lock className="w-12 h-12 mx-auto mb-2" />
+                <p className="font-semibold">Upgrade to Unlock</p>
+              </div>
+            </div>
+          )}
+
+          {/* Hover Action Overlay */}
+          {!isLocked && (
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <Link href={`/builder?template=${template.id}&color=${selectedColor.id}`}>
+                <Button className="shadow-lg" data-testid={`button-use-template-${template.id}`}>
+                  Use This Template
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
-        
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <Link href={`/builder?template=${template.id}&color=${selectedColor.id}`}>
-            <Button className="shadow-lg" data-testid={`button-use-template-${template.id}`}>
-              Use This Template
-            </Button>
-          </Link>
-        </div>
-      </div>
-      
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-gray-900">{template.name}</h3>
-          <Badge variant="secondary" className="text-xs capitalize">
-            {template.style}
-          </Badge>
-        </div>
-        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{template.description}</p>
-        
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1">
-            {templateColors.slice(0, 6).map((color) => (
-              <button
-                key={color.id}
-                className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${
-                  selectedColor.id === color.id ? "ring-2 ring-offset-1 ring-gray-400" : ""
-                }`}
-                style={{ backgroundColor: color.hex }}
-                onClick={() => setSelectedColor(color)}
-                title={color.name}
-                data-testid={`button-color-${color.id}`}
-              />
-            ))}
+
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-gray-900">{template.name}</h3>
+            <Badge variant="secondary" className="text-xs capitalize">
+              {template.style}
+            </Badge>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <p className="text-sm text-gray-500 mb-3 line-clamp-2">{template.description}</p>
+
+          {!isLocked && (
+            <div className="flex items-center justify-between">
+              <div className="flex gap-1">
+                {templateColors.slice(0, 6).map((color) => (
+                  <button
+                    key={color.id}
+                    className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${selectedColor.id === color.id ? "ring-2 ring-offset-1 ring-gray-400" : ""
+                      }`}
+                    style={{ backgroundColor: color.hex }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedColor(color);
+                    }}
+                    title={color.name}
+                    data-testid={`button-color-${color.id}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        requiredTier={template.tier}
+        templateName={template.name}
+        thumbnail={template.thumbnail}
+      />
+    </>
   );
 }

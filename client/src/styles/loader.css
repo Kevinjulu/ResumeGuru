@@ -1,0 +1,399 @@
+/* ============================================================================
+   Modern ResumeGuru Loader Component
+   Brand Colors: Orange (#EA723C) and Blue (#3B82F6)
+   ============================================================================ */
+
+/* Container for loader and text */
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* Main loader wrapper */
+.loader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Size variants */
+.loader-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.loader-md {
+  width: 48px;
+  height: 48px;
+}
+
+.loader-lg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Loader content - the animated bar */
+.loader-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Main animated bar */
+.loader-bar {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    #EA723C 0%,
+    #EA723C 25%,
+    #3B82F6 50%,
+    #3B82F6 75%,
+    #EA723C 100%
+  );
+  background-size: 200% 100%;
+  border-radius: 20px;
+  animation: barSlide 3s ease-in-out infinite;
+}
+
+.loader-sm .loader-bar {
+  width: 20px;
+  height: 4px;
+}
+
+.loader-md .loader-bar {
+  width: 32px;
+  height: 6px;
+}
+
+.loader-lg .loader-bar {
+  width: 48px;
+  height: 8px;
+}
+
+/* Loading text */
+.loader-text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica",
+    "Arial", sans-serif;
+  font-weight: 600;
+  background: linear-gradient(135deg, #EA723C 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}
+
+.loader-text-sm {
+  font-size: 12px;
+}
+
+.loader-text-md {
+  font-size: 14px;
+}
+
+.loader-text-lg {
+  font-size: 16px;
+}
+
+/* ============================================================================
+   Animation Keyframes
+   ============================================================================ */
+
+/* Main bar slide animation */
+@keyframes barSlide {
+  0% {
+    background-position: 0% 0;
+    left: -100%;
+  }
+  25% {
+    left: 0%;
+  }
+  50% {
+    left: 100%;
+  }
+  75% {
+    left: 0%;
+  }
+  100% {
+    background-position: 100% 0;
+    left: -100%;
+  }
+}
+
+/* ============================================================================
+   Alternative: Sophisticated Animated Dots Pattern
+   ============================================================================ */
+
+.loader-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loader-dot {
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EA723C 0%, #3B82F6 100%);
+  opacity: 0.4;
+}
+
+.loader-sm .loader-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.loader-md .loader-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.loader-lg .loader-dot {
+  width: 12px;
+  height: 12px;
+}
+
+.loader-dot:nth-child(1) {
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.loader-dot:nth-child(2) {
+  animation: dotPulse 1.4s ease-in-out 0.2s infinite;
+}
+
+.loader-dot:nth-child(3) {
+  animation: dotPulse 1.4s ease-in-out 0.4s infinite;
+}
+
+@keyframes dotPulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================================================
+   Circular Ring Loader (Modern Premium Look)
+   ============================================================================ */
+
+.loader-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: #EA723C;
+  border-right-color: #3B82F6;
+  animation: ringRotate 1.5s linear infinite;
+}
+
+.loader-ring::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-left-color: #EA723C;
+  border-bottom-color: #3B82F6;
+  animation: ringRotate 2s linear infinite reverse;
+}
+
+.loader-sm .loader-ring::before,
+.loader-sm .loader-ring::after {
+  border-width: 1px;
+  inset: 1px;
+}
+
+.loader-md .loader-ring::before,
+.loader-md .loader-ring::after {
+  border-width: 2px;
+  inset: 2px;
+}
+
+.loader-lg .loader-ring::before,
+.loader-lg .loader-ring::after {
+  border-width: 3px;
+  inset: 4px;
+}
+
+@keyframes ringRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   Gradient Wave Loader (Sophisticated)
+   ============================================================================ */
+
+.loader-wave {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.loader-wave-bar {
+  width: 4px;
+  background: linear-gradient(180deg, #EA723C 0%, #3B82F6 100%);
+  border-radius: 10px 10px 0 0;
+}
+
+.loader-sm .loader-wave-bar {
+    width: 3px;
+    height: 16px;
+}
+
+.loader-md .loader-wave-bar {
+  width: 4px;
+  height: 24px;
+}
+
+.loader-lg .loader-wave-bar {
+  width: 6px;
+  height: 32px;
+}
+
+.loader-wave-bar:nth-child(1) {
+  animation: waveMove 0.6s ease-in-out infinite;
+}
+.loader-wave-bar:nth-child(2) {
+  animation: waveMove 0.6s ease-in-out 0.1s infinite;
+}
+.loader-wave-bar:nth-child(3) {
+  animation: waveMove 0.6s ease-in-out 0.2s infinite;
+}
+.loader-wave-bar:nth-child(4) {
+  animation: waveMove 0.6s ease-in-out 0.3s infinite;
+}
+.loader-wave-bar:nth-child(5) {
+  animation: waveMove 0.6s ease-in-out 0.4s infinite;
+}
+
+@keyframes waveMove {
+  0%,
+  100% {
+    height: 100%;
+    opacity: 1;
+  }
+  50% {
+    height: 40%;
+    opacity: 0.6;
+  }
+}
+
+/* ============================================================================
+   Enhanced CSS for Original Loader Variant (Modernized)
+   ============================================================================ */
+
+/* Original loader with brand colors applied */
+.loader-original {
+  width: fit-content;
+  font-size: 17px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica",
+    "Arial", sans-serif;
+  line-height: 1.4;
+  font-weight: bold;
+  background: linear-gradient(#EA723C 0 0) left, linear-gradient(#EA723C 0 0) right;
+  background-repeat: no-repeat;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  background-origin: border-box;
+  position: relative;
+  animation: originalLoad 2s infinite;
+  color: #EA723C;
+}
+
+.loader-original::before {
+  content: "Loading";
+}
+
+.loader-original::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 22px;
+  height: 60px;
+  background: linear-gradient(90deg, #EA723C 4px, transparent 0 calc(100% - 4px), #EA723C 0)
+      bottom / 22px 20px,
+    linear-gradient(90deg, #3B82F6 4px, transparent 0 calc(100% - 4px), #3B82F6 0) bottom 10px left 0 /
+      22px 6px,
+    linear-gradient(#EA723C 0 0) bottom 3px left 0 / 22px 8px,
+    linear-gradient(#EA723C 0 0) bottom 0 left 50% / 8px 16px;
+  background-repeat: no-repeat;
+  animation: originalMove 2s infinite;
+}
+
+@keyframes originalLoad {
+  0%,
+  25% {
+    background-size: 50% 100%;
+  }
+  25.1%,
+  75% {
+    background-size: 0 0, 50% 100%;
+  }
+  75.1%,
+  100% {
+    background-size: 0 0, 0 0;
+  }
+}
+
+@keyframes originalMove {
+  25% {
+    background-position: bottom, bottom 54px left 0, bottom 3px left 0, bottom 0 left 50%;
+    left: 0;
+  }
+  25.1% {
+    background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%;
+    left: 0;
+  }
+  50% {
+    background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%;
+    left: calc(100% - 22px);
+  }
+  75% {
+    background-position: bottom, bottom 54px left 0, bottom 3px left 0, bottom 0 left 50%;
+    left: calc(100% - 22px);
+  }
+  75.1% {
+    background-position: bottom, bottom 10px left 0, bottom 3px left 0, bottom 0 left 50%;
+    left: calc(100% - 22px);
+  }
+}
+
+/* ============================================================================
+   Responsive Utilities
+   ============================================================================ */
+
+@media (max-width: 640px) {
+  .loader-container {
+    gap: 0.75rem;
+  }
+
+  .loader-text {
+    font-size: 12px !important;
+  }
+}

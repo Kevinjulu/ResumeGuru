@@ -202,7 +202,7 @@ export default function Pricing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              onAnimationComplete={() => pricingEvents.comparisontTableViewed()}
+              onAnimationComplete={() => pricingEvents.comparisonTableViewed()}
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
                 Detailed Feature Comparison

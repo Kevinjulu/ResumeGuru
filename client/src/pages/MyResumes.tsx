@@ -2,97 +2,108 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
+import { Loader } from "@/components/common/Loader";
 import { PlusCircle, FileText, Trash2, Edit, Copy } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "convex/_generated/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
-import { useConvexAuth } from "convex/react";
+import { useUser } from "@/hooks/use-user";
 import { Badge } from "@/components/ui/badge";
 
 interface ResumeItem {
-  _id: string;
+  id: string;
   title: string;
   templateId: string;
   colorId: string;
-  _creationTime: number;
+  createdAt: string;
   data: any; // Raw resume data
 }
 
 export default function MyResumes() {
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { user, isLoading: authLoading } = useUser();
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
 
-  const resumes = useQuery(api.resumes.getResumes, isAuthenticated ? undefined : "skip");
+  const { data: resumes, isLoading: resumesLoading } = useQuery<ResumeItem[]>({
+    queryKey: ["resumes"],
+    queryFn: async () => {
+      const res = await fetch("/api/resumes");
+      if (!res.ok) throw new Error("Failed to fetch resumes");
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-  const deleteMutation = useMutation(api.resumes.deleteResume);
-  const createMutation = useMutation(api.resumes.createResume);
-
-  const duplicateMutation = useMutation(api.resumes.createResume).withOptimisticUpdate(
-    (localStore, { title, data, templateId, colorId }) => {
-      const optimisticResume = {
-        _id: "temp-id",
-        title: `${title} (Copy)`,
-        data,
-        templateId,
-        colorId,
-        _creationTime: Date.now(),
-        userId: "temp-user-id",
-      };
-      const existingResumes = localStore.getQuery(api.resumes.getResumes);
-      if (existingResumes) {
-        localStore.setQuery(
-          api.resumes.getResumes,
-          [...existingResumes, optimisticResume]
-        );
-      }
-    }
-  );
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteMutation({ id });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/resumes/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete resume");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
       toast({
         title: "Resume Deleted",
         description: "Your resume has been successfully deleted.",
       });
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete resume.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const handleDuplicate = async (resume: ResumeItem) => {
-    try {
-      await duplicateMutation({
-        title: `${resume.title} (Copy)`,
-        data: resume.data,
-        templateId: resume.templateId,
-        colorId: resume.colorId,
-        userId: "temp-user-id", // This should be the actual user ID
+  const duplicateMutation = useMutation({
+    mutationFn: async (resume: ResumeItem) => {
+      const res = await fetch("/api/resumes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${resume.title} (Copy)`,
+          data: resume.data,
+          templateId: resume.templateId,
+          colorId: resume.colorId,
+        }),
       });
+      if (!res.ok) throw new Error("Failed to duplicate resume");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["resumes"] });
       toast({
         title: "Resume Duplicated",
         description: "A copy of your resume has been created.",
       });
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to duplicate resume.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
-  if (authLoading || resumes === undefined) {
+  const handleDuplicate = (resume: ResumeItem) => {
+    duplicateMutation.mutate(resume);
+  };
+
+  if (authLoading || resumesLoading) {
     return (
       <MainLayout>
-        <div className="container mx-auto py-10 text-center">Loading resumes...</div>
+        <div className="container mx-auto py-10 flex items-center justify-center min-h-[400px]">
+          <Loader size="md" text="Loading resumes..." />
+        </div>
       </MainLayout>
     );
   }
@@ -131,14 +142,14 @@ export default function MyResumes() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {resumes?.map((resume) => (
-              <Card key={resume._id} className="flex flex-col">
+              <Card key={resume.id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>{resume.title}</span>
                     <Badge variant="secondary">{resume.templateId}</Badge>
                   </CardTitle>
                   <CardDescription className="text-sm">
-                    Last updated: {new Date(resume._creationTime).toLocaleDateString()}
+                    Last updated: {new Date(resume.createdAt).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
@@ -148,7 +159,7 @@ export default function MyResumes() {
                   </div>
                 </CardContent>
                 <div className="flex justify-end p-4 pt-0 gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/builder?resumeId=${resume._id}`)} className="gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/builder?resumeId=${resume.id}`)} className="gap-2">
                     <Edit className="w-4 h-4" /> Edit
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDuplicate(resume)} className="gap-2">
@@ -169,7 +180,7 @@ export default function MyResumes() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(resume._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => handleDelete(resume.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>

@@ -3,93 +3,101 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Link, useLocation } from "wouter";
 import { PlusCircle, MailOpen, Trash2, Edit, Copy } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "convex/_generated/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { useState } from "react";
-import { useConvexAuth } from "convex/react";
+import { useUser } from "@/hooks/use-user";
 import { Badge } from "@/components/ui/badge";
 
 interface CoverLetterItem {
-  _id: string;
+  id: string;
   title: string;
   templateId: string;
   colorId: string;
-  _creationTime: number;
+  createdAt: string;
   data: any; // Raw cover letter data
 }
 
 export default function MyCoverLetters() {
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { user, isLoading: authLoading } = useUser();
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
 
-  const coverLetters = useQuery(api.coverLetters.getCoverLetters, isAuthenticated ? undefined : "skip");
+  const { data: coverLetters, isLoading: coverLettersLoading } = useQuery<CoverLetterItem[]>({
+    queryKey: ["coverLetters"],
+    queryFn: async () => {
+      const res = await fetch("/api/coverletters");
+      if (!res.ok) throw new Error("Failed to fetch cover letters");
+      return res.json();
+    },
+    enabled: !!user,
+  });
 
-  const deleteMutation = useMutation(api.coverLetters.deleteCoverLetter);
-  const createMutation = useMutation(api.coverLetters.createCoverLetter);
-
-  const duplicateMutation = useMutation(api.coverLetters.createCoverLetter).withOptimisticUpdate(
-    (localStore, { title, data, templateId, colorId }) => {
-      const optimisticCoverLetter = {
-        _id: "temp-id",
-        title: `${title} (Copy)`,
-        data,
-        templateId,
-        colorId,
-        _creationTime: Date.now(),
-        userId: "temp-user-id",
-      };
-      const existingCoverLetters = localStore.getQuery(api.coverLetters.getCoverLetters);
-      if (existingCoverLetters) {
-        localStore.setQuery(
-          api.coverLetters.getCoverLetters,
-          [...existingCoverLetters, optimisticCoverLetter]
-        );
-      }
-    }
-  );
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteMutation({ id });
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/coverletters/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete cover letter");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coverLetters"] });
       toast({
         title: "Cover Letter Deleted",
         description: "Your cover letter has been successfully deleted.",
       });
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to delete cover letter.",
         variant: "destructive",
       });
-    }
-  };
+    },
+  });
 
-  const handleDuplicate = async (coverLetter: CoverLetterItem) => {
-    try {
-      await duplicateMutation({
-        title: `${coverLetter.title} (Copy)`,
-        data: coverLetter.data,
-        templateId: coverLetter.templateId,
-        colorId: coverLetter.colorId,
-        userId: "temp-user-id", // This should be the actual user ID
+  const duplicateMutation = useMutation({
+    mutationFn: async (coverLetter: CoverLetterItem) => {
+      const res = await fetch("/api/coverletters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `${coverLetter.title} (Copy)`,
+          data: coverLetter.data,
+          templateId: coverLetter.templateId,
+          colorId: coverLetter.colorId,
+        }),
       });
+      if (!res.ok) throw new Error("Failed to duplicate cover letter");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coverLetters"] });
       toast({
         title: "Cover Letter Duplicated",
         description: "A copy of your cover letter has been created.",
       });
-    } catch (error) {
+    },
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to duplicate cover letter.",
         variant: "destructive",
       });
-    }
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
-  if (authLoading || coverLetters === undefined) {
+  const handleDuplicate = (coverLetter: CoverLetterItem) => {
+    duplicateMutation.mutate(coverLetter);
+  };
+
+  if (authLoading || coverLettersLoading) {
     return (
       <MainLayout>
         <div className="container mx-auto py-10 text-center">Loading cover letters...</div>
@@ -131,14 +139,14 @@ export default function MyCoverLetters() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {coverLetters?.map((coverLetter) => (
-              <Card key={coverLetter._id} className="flex flex-col">
+              <Card key={coverLetter.id} className="flex flex-col">
                 <CardHeader>
                   <CardTitle className="flex justify-between items-center">
                     <span>{coverLetter.title}</span>
                     <Badge variant="secondary">{coverLetter.templateId}</Badge>
                   </CardTitle>
                   <CardDescription className="text-sm">
-                    Last updated: {new Date(coverLetter._creationTime).toLocaleDateString()}
+                    Last updated: {new Date(coverLetter.createdAt).toLocaleDateString()}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
@@ -150,7 +158,7 @@ export default function MyCoverLetters() {
                   </div>
                 </CardContent>
                 <div className="flex justify-end p-4 pt-0 gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/cover-letter-builder?coverLetterId=${coverLetter._id}`)} className="gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/cover-letter-builder?coverLetterId=${coverLetter.id}`)} className="gap-2">
                     <Edit className="w-4 h-4" /> Edit
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleDuplicate(coverLetter)} className="gap-2">
@@ -171,7 +179,7 @@ export default function MyCoverLetters() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(coverLetter._id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction onClick={() => handleDelete(coverLetter.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                           Delete
                         </AlertDialogAction>
                       </AlertDialogFooter>

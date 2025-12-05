@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { useAuth, useUser } from "@clerk/clerk-react";
+// import { useAuth, useUser } from "@clerk/clerk-react"; // Removed Clerk imports
+import { useUser } from "@/hooks/use-user"; // Added custom hook
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import { FullPageLoader } from "@/components/common/Loader";
 import {
   User,
   Mail,
@@ -19,14 +21,56 @@ import {
   Clock,
   FileText,
   Link as LinkIcon,
+  Camera,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 export default function Account() {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useAuth();
+  const { user, isLoaded, logout } = useUser();
+  // const { signOut } = useAuth(); // Removed Clerk useAuth
   const [activeTab, setActiveTab] = useState("profile");
   const [subscription, setSubscription] = useState<any>(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    setUploading(true);
+    try {
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to upload avatar");
+
+      const data = await res.json();
+
+      // Invalidate user query to refresh avatar
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload profile picture",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
 
   // Fetch subscription data when account page loads
   useEffect(() => {
@@ -53,10 +97,7 @@ export default function Account() {
     return (
       <MainLayout>
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-gray-600 font-medium">Loading your account...</p>
-          </div>
+          <FullPageLoader text="Loading your account..." />
         </div>
       </MainLayout>
     );
@@ -99,27 +140,41 @@ export default function Account() {
               <CardContent className="p-8">
                 <div className="flex items-start justify-between">
                   <div className="flex gap-6">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-blue-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-                      {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    <div className="relative group">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-orange-400 to-blue-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg overflow-hidden">
+                        {user?.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <span>{user?.username?.[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <label
+                        htmlFor="avatar-upload"
+                        className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full"
+                      >
+                        <Camera className="w-6 h-6" />
+                      </label>
+                      <input
+                        id="avatar-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                        disabled={uploading}
+                      />
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-900">
-                        {user?.firstName} {user?.lastName}
+                        {user?.username}
                       </h3>
                       <p className="text-gray-600 flex items-center gap-2 mt-1">
                         <Mail className="w-4 h-4" />
-                        {user?.primaryEmailAddress?.emailAddress}
+                        {user?.email}
                       </p>
-                      <div className="flex gap-2 mt-3">
-                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
-                          <Check className="w-3 h-3" />
-                          Email Verified
-                        </span>
-                      </div>
                     </div>
                   </div>
                   <Button
-                    onClick={() => user?.update?.({})}
+                    onClick={() => toast({ title: "Not implemented", description: "Profile editing is coming soon." })}
                     className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
                   >
                     Edit Profile
@@ -142,10 +197,10 @@ export default function Account() {
                   <div className="flex justify-between items-start pb-4 border-b border-gray-100">
                     <div>
                       <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        Full Name
+                        Username
                       </p>
                       <p className="text-gray-900 font-semibold mt-1">
-                        {user?.firstName} {user?.lastName}
+                        {user?.username}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm">
@@ -159,7 +214,7 @@ export default function Account() {
                         Email Address
                       </p>
                       <p className="text-gray-900 font-semibold mt-1">
-                        {user?.primaryEmailAddress?.emailAddress}
+                        {user?.email}
                       </p>
                     </div>
                     <Button variant="ghost" size="sm">
@@ -175,10 +230,10 @@ export default function Account() {
                       <p className="text-gray-900 font-semibold mt-1">
                         {user?.createdAt
                           ? new Date(user.createdAt).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })
                           : "N/A"}
                       </p>
                     </div>
@@ -293,65 +348,6 @@ export default function Account() {
                   Password & Security
                 </h3>
               </CardHeader>
-              <Separator />
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                    <div>
-                      <p className="font-medium text-gray-900">Password</p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Change your password regularly to keep your account secure
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => user?.changePassword?.()}
-                      variant="outline"
-                    >
-                      Change Password
-                    </Button>
-                  </div>
-
-                  <div className="flex justify-between items-center pt-4">
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        Two-Factor Authentication
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Add an extra layer of security to your account
-                      </p>
-                    </div>
-                    <Button variant="outline">Enable 2FA</Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Active Sessions */}
-            <Card>
-              <CardHeader>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-primary" />
-                  Active Sessions
-                </h3>
-              </CardHeader>
-              <Separator />
-              <CardContent className="p-6">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-900">
-                    <span className="font-semibold">Current Device</span> - Last
-                    active just now
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        );
-
-      case "settings":
-        return (
-          <motion.div variants={itemVariants} className="space-y-6">
-            {/* Preferences */}
-            <Card>
               <CardHeader>
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                   <Settings className="w-5 h-5 text-primary" />
@@ -460,7 +456,7 @@ export default function Account() {
               </p>
             </div>
             <Button
-              onClick={() => signOut()}
+              onClick={() => logout()}
               className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-2"
             >
               <LogOut className="w-4 h-4" />
@@ -482,11 +478,10 @@ export default function Account() {
                   key={tab.id}
                   variants={itemVariants}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative p-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center md:justify-start gap-2 ${
-                    activeTab === tab.id
-                      ? "bg-white border-2 border-primary text-primary shadow-md"
-                      : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
-                  }`}
+                  className={`relative p-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center md:justify-start gap-2 ${activeTab === tab.id
+                    ? "bg-white border-2 border-primary text-primary shadow-md"
+                    : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300"
+                    }`}
                 >
                   <TabIcon className="w-5 h-5" />
                   <span className="hidden md:inline">{tab.label}</span>

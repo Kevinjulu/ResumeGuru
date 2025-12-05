@@ -10,7 +10,7 @@ export interface IStorage {
   getUserByPasswordResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User | undefined>;
-  
+
   getResume(id: string): Promise<Resume | undefined>;
   getResumesByUserId(userId: string): Promise<Resume[]>;
   createResume(resume: InsertResume): Promise<Resume>;
@@ -63,8 +63,8 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
+  async createUser(insertUser: InsertUser & { id?: string }): Promise<User> {
+    const id = insertUser.id || randomUUID();
     const user: User = { ...insertUser, id, accountTier: insertUser.accountTier ?? "free" } as User;
     this.users.set(id, user);
     return user;
@@ -237,11 +237,11 @@ class DbStorage implements IStorage {
     return rows[0];
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
+  async createUser(insertUser: InsertUser & { id?: string }): Promise<User> {
+    const id = insertUser.id || randomUUID();
     const [row] = await this.db
       .insert(users)
-      .values({ id, username: insertUser.username, password: insertUser.password, accountTier: insertUser.accountTier ?? "free" })
+      .values({ id, username: insertUser.username, password: insertUser.password, accountTier: insertUser.accountTier ?? "free", email: insertUser.email })
       .returning();
     return row as User;
   }

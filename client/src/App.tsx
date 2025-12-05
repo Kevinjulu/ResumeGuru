@@ -2,9 +2,6 @@ import React, { Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { useAuth, useSession } from "@clerk/clerk-react";
-import { ConvexReactClient } from "convex/react";
 
 const Home = React.lazy(() => import("@/pages/Home"));
 const Templates = React.lazy(() => import("@/pages/Templates"));
@@ -43,24 +40,12 @@ const BlogSpecializedGuides = React.lazy(() => import("@/pages/BlogSpecializedGu
 const SupportFaq = React.lazy(() => import("@/pages/SupportFaq"));
 const SupportContact = React.lazy(() => import("@/pages/SupportContact"));
 const SupportBilling = React.lazy(() => import("@/pages/SupportBilling"));
-
-const convexUrl = (import.meta.env.VITE_CONVEX_URL as string | undefined) || undefined;
-let convex: ReturnType<typeof ConvexReactClient> | null = null;
-if (convexUrl) {
-  try {
-    convex = new ConvexReactClient(convexUrl as string);
-  } catch (e) {
-    // Don't throw during module initialization — handle at render time
-    console.warn("ConvexReactClient initialization failed:", e);
-    convex = null;
-  }
-} else {
-  // Informative warning for missing config during development
-  // overlay plugin shows this message; keep a console warning instead
-  // so the app does not crash when convex isn't configured.
-  // The presence of this env var is required for Convex features.
-  console.warn("VITE_CONVEX_URL is not set — Convex client unavailable.");
-}
+const HelpCenter = React.lazy(() => import("@/pages/HelpCenter"));
+const PrivacyPolicy = React.lazy(() => import("@/pages/PrivacyPolicy"));
+const AboutUs = React.lazy(() => import("@/pages/AboutUs"));
+const Careers = React.lazy(() => import("@/pages/Careers"));
+const Press = React.lazy(() => import("@/pages/Press"));
+const CareerBlog = React.lazy(() => import("@/pages/CareerBlog"));
 
 function Router() {
   return (
@@ -93,13 +78,21 @@ function Router() {
       <Route path="/templates/ats-friendly" component={TemplatesAtsFriendly} />
       <Route path="/templates/categories" component={TemplatesCategories} />
       <Route path="/examples/industry" component={ExamplesIndustry} />
+      <Route path="/blog" component={CareerBlog} />
       <Route path="/blog/resume-help" component={BlogResumeHelp} />
       <Route path="/blog/cover-letter-help" component={BlogCoverLetterHelp} />
       <Route path="/blog/job-search" component={BlogJobSearch} />
       <Route path="/blog/specialized-guides" component={BlogSpecializedGuides} />
       <Route path="/support/faq" component={SupportFaq} />
+      <Route path="/faq" component={SupportFaq} />
       <Route path="/support/contact" component={SupportContact} />
+      <Route path="/contact" component={SupportContact} />
       <Route path="/support/billing" component={SupportBilling} />
+      <Route path="/help" component={HelpCenter} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/about" component={AboutUs} />
+      <Route path="/careers" component={Careers} />
+      <Route path="/press" component={Press} />
       <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
@@ -107,70 +100,13 @@ function Router() {
 }
 
 function App() {
-  function AuthMaintenance() {
-    const { isSignedIn, getToken } = useAuth();
-    const { session } = useSession();
-
-    React.useEffect(() => {
-      if (!isSignedIn) return;
-
-      let cancelled = false;
-      const refresh = async () => {
-        try {
-          await getToken({ template: "convex" });
-        } catch (e: any) {
-          const msg = String(e?.message || "");
-          if (msg.toLowerCase().includes("expired") || msg.toLowerCase().includes("jwt")) {
-            try {
-              await session?.reload();
-              await getToken({ template: "convex" });
-            } catch (_) {
-              /* swallow */
-            }
-          }
-        }
-      };
-
-      // Initial refresh, then periodic preemptive refresh
-      refresh();
-      const id = setInterval(refresh, 4 * 60 * 1000);
-      return () => {
-        cancelled = true;
-        clearInterval(id);
-      };
-    }, [isSignedIn, getToken, session]);
-
-    return null;
-  }
-
-  // If Convex client isn't available, render app without provider
-  if (!convex) {
-    return (
-      <TooltipProvider>
-        <Toaster />
-        <div style={{ padding: 16 }}>
-          <strong style={{ color: "#b45309" }}>
-            Convex client not configured — some features are disabled.
-          </strong>
-        </div>
-        <Suspense fallback={<div>Loading...</div>}>
-          <Router />
-        </Suspense>
-        <AuthMaintenance />
-      </TooltipProvider>
-    );
-  }
-
   return (
-    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-      <TooltipProvider>
-        <Toaster />
-        <Suspense fallback={<div>Loading...</div>}>
-          <Router />
-        </Suspense>
-        <AuthMaintenance />
-      </TooltipProvider>
-    </ConvexProviderWithClerk>
+    <TooltipProvider>
+      <Toaster />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Router />
+      </Suspense>
+    </TooltipProvider>
   );
 }
 
